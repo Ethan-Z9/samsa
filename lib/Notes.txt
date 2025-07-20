@@ -1,0 +1,86 @@
+lib
+
+-main (File) Main File
+
+-app (File) App File
+
+-theme (Folder) Folder holding theme schemes
+--color_palette (File) File holding all color palettes
+
+-screens (Folder) Folder holding screens
+--splash_screen (File) File holding code for display before app opens(Fun boot up screen?)
+--login_screen (File) File holding code for login display when app opens
+
+-auth (Folder) Folder holding auth parts
+--auth_service (File) Pulls from spreadsheet to check login?
+--user_data (File) uses auth_service to pull user match data?
+
+-data (Folder) Folder holding data
+--gsheet_convert (File)
+--data (Folder)
+---matches (File) File holding match data with users scouting which
+---students (File) File holding user data for login
+
+-header (Folder) Folder holding the universal widget stuff
+--app_header (File) File holding code for app header create and display
+
+-drawer (Folder) Folder holding drawer stuff
+--drawer (File) File contain code about drawer asthestics
+--drawer_nav (File) File holding code handling nagigation between pages
+
+-clock (Folder) Folder holing clock stuff
+--clock (File) File holding code on the system clock
+
+-user (Folder) File holding code about the user icon
+--user_menu File holding code about user_menu stuff
+
+-form (Folder) Folder holding recording items
+--counter (File)
+--checkbox (File)
+--radio (File)
+--slider (File)
+--text (File)
+--toggle (File)
+--number(File)
+--date (File)
+--time (File)
+--selection (File)
+--grid (File)
+
+-pages (Folder) Folder holding all pages
+
+--dashboard (Folder) Folder holding dashboard stuff
+---dashboard (File) File holding code about the dashboard display items/panels
+---dashboard_panel (File) File holding code about the Panel display
+
+--match Scout (Folder)
+---match_scout (File) File holding code handling display(record_items)
+
+--pit Scout (Folder)
+---pit_scout (File) File holding code about pit_scout display items/panel
+
+--view (Folder)
+---view (File) File holding code about view display items/panel
+---team (Folder)
+----view_team (File)
+----view_team_compare (File)
+---match (Folder)
+----view_match (File)
+----view_match_compare (File)
+
+--analyze (Folder)
+Future implement ai
+
+--import/export (Folder)
+---import_export (File ) File holding code about import/export display items/panel
+---import (File) File holding code handling imports
+---export (File) File holding code handling exports
+
+--setting (Folder)
+---setting (File) File holding code about setting display items/panel
+---setting_pages (Folder) Folder holding setting page pages
+----setting_pages_general (File) File holding settings general
+----setting_pages_appearance (File) File holding settings appearance
+----setting_pages_customize_match_scout (File) File holding code about what forms are added(MAYBE. Do i want backend customization(limited to user) or let users freewil)
+----setting_pages_disclaimer (File) File holding setting disclaimer
+----setting_pages_about (File) File holding setting about
