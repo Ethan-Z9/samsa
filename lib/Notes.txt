@@ -16,7 +16,8 @@ lib
 --user_data (File) uses auth_service to pull user match data?
 
 -data (Folder) Folder holding data
---gsheet_convert (File)
+--csv_loader (File)
+--scout_repository (File)
 --data (Folder)
 ---matches (File) File holding match data with users scouting which
 ---students (File) File holding user data for login

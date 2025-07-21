@@ -1,18 +1,31 @@
-name: frc_scouting_app
-description: FRC Robotics Scouting App
+name: frc_scout_app
+description: "Offline-First FRC Scouting Application"
 
-publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  csv: ^5.0.1
+  provider: ^6.0.5
+  googleapis: ^11.0.0  # For optional Sheets integration
+  intl: ^0.18.1       # For date/time formatting
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  hive_generator: ^2.0.0
+  build_runner: ^2.4.6
 
 flutter:
   uses-material-design: true
+  
   assets:
-    - assets/images/app_icon.png
+    - assets/images/app_logo.png       # Splash screen logo
+    - assets/csv/scouts.csv            # Scout roster
+    - assets/csv/matches.csv           # Match schedule
