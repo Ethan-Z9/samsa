@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frc_scout_app/drawer/app_drawer_nav.dart'; // Correct import
+import 'app_drawer_nav.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -7,16 +7,43 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
+          // Drawer Header
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.green,
             ),
-            child: Text('FRC Scout Menu'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'FRC Scout App',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Navigation',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
-          ...AppDrawerNav.getDrawerItems(context), // Changed from DrawerNav to AppDrawerNav
+
+          // Divider
+          const Divider(height: 1, thickness: 1),
+
+          // Navigation Items
+          const Expanded(
+            child: AppDrawerNav(),
+          ),
         ],
       ),
     );

@@ -9,11 +9,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
-  final _formKey = GlobalKey<FormState>();
-  final auth = AuthService();
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -23,14 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final isValid = await _authService.validateScout(_emailController.text.trim());
       if (isValid) {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        }
+        Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         _showError('Email not found in roster');
       }
     } catch (e) {
-      _showError('Login failed: ${e.toString()}');
+      _showError('Login error: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -83,7 +80,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const FlutterLogo(size: 72),
+                        Image.asset(
+                          'assets/images/app_logo.png',
+                          height: 100,
+                          width: 100,
+                        ),
                         const SizedBox(height: 24),
                         TextFormField(
                           controller: _emailController,
@@ -97,8 +98,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!value.contains('@')) {
-                              return 'Enter a valid email';
+                            if (!value.contains('@') || !value.contains('.')) {
+                              return 'Enter a valid email address';
                             }
                             return null;
                           },

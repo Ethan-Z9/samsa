@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import 'package:frc_scout_app/data/hive_init.dart';
 
 class AuthService {
@@ -17,10 +16,10 @@ class AuthService {
   Future<void> logout() async {
     await HiveInit.scoutsBox.delete(_currentUserKey);
   }
-
+  
   Future<bool> isLoggedIn() async {
-    final userData = await HiveInit.scoutsBox.get(_currentUserKey);
-    return userData != null && userData['email'] != null;
+  final currentEmail = await getCurrentEmail();
+  return currentEmail != null && currentEmail.isNotEmpty;
   }
 
   Future<String?> getCurrentEmail() async {
