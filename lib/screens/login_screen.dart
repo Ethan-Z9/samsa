@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/auth/auth_service.dart';
+import 'package:frc_scout_app/data/user_session.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,9 +22,25 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final isValid = await _authService.validateScout(_emailController.text.trim());
+      final email = _emailController.text.trim().toLowerCase();
+      final isValid = await _authService.validateScout(email);
+
       if (isValid) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        final user = await _authService.getScoutData(email);
+
+        if (user != null) {
+          // Save user's name to session
+          final session = UserSession();
+          session.firstName = user['firstName'] ?? '';
+          session.lastName = user['lastName'] ?? '';
+
+          // Save login state in Hive
+          await _authService.login(email);
+
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          _showError('User info not found');
+        }
       } else {
         _showError('Email not found in roster');
       }
@@ -65,105 +82,86 @@ class _LoginScreenState extends State<LoginScreen> {
               fit: BoxFit.cover,
             ),
           ),
-
           Center(
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: SizedBox(
                   width: 300,
-
-                  /*
-                  // Filled in box
-                  child: Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                  //
-                  */
-
-                  // Transparent box
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.white30),
-                    ),  
-                  //
-
-                      padding: const EdgeInsets.all(24.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/images/app_logo.png',
-                              height: 150,
-                              width: 150,
+                    ),
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/app_logo.png',
+                            height: 150,
+                            width: 150,
+                          ),
+                          const SizedBox(height: 24),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                              prefixIcon: Icon(Icons.email),
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white70,
                             ),
-                            const SizedBox(height: 24),
-                            TextFormField(
-                              controller: _emailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: Icon(Icons.email),
-                                border: OutlineInputBorder(),
-                                //
-                                filled: true,
-                                fillColor: Colors.white70,
-                                //
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@') || !value.contains('.')) {
-                                  return 'Enter a valid email address';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _handleLogin,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    side: const BorderSide(
-                                      color: Color.fromARGB(255, 73, 69, 79),
-                                      width: 1,
-                                    ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!value.contains('@') || !value.contains('.')) {
+                                return 'Enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: const BorderSide(
+                                    color: Color.fromARGB(255, 73, 69, 79),
+                                    width: 1,
                                   ),
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('LOGIN', style: TextStyle(fontSize: 16),),
                               ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('LOGIN', style: TextStyle(fontSize: 16)),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          // ), // Filled in Box
-        ]
+          ),
+        ],
       ),
     );
   }

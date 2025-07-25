@@ -7,7 +7,7 @@ class HiveInit {
   static Future<void> init() async {
     await Hive.initFlutter();
     scoutsBox = await Hive.openBox('scouts');
-    matchesBox = await Hive.openBox('matches');
+    matchesBox = await Hive.openBox('matches_flr');
   }
   
   static Future<void> clearAllData() async {

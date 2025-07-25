@@ -29,4 +29,4 @@ flutter:
     - assets/images/app_logo.png       # Splash screen logo
     - assets/images/login_screen_background.png       # Login screen background
     - assets/csv/scouts.csv            # Scout roster
-    - assets/csv/matches.csv           # Match schedule
+    - assets/csv/matches_flr.csv           # Match schedule

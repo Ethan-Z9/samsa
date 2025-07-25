@@ -44,18 +44,39 @@ class _SettingState extends State<Setting> {
             child: ListView.builder(
               itemCount: _titles.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_titles[index]),
-                  selected: _selectedIndex == index,
-                  selectedTileColor: Colors.green[100],
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      title: Text(
+                        _titles[index],
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _selectedIndex == index ? Colors.green[800] : Colors.black87,
+                        ),
+                      ),
+                      selected: _selectedIndex == index,
+                      selectedTileColor: Colors.green[100],
+                      onTap: () {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                      },
+                    ),
+                    if (index != _titles.length - 1)
+                      const Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 8,
+                        endIndent: 8,
+                        color: Colors.grey,
+                      ),
+                  ],
                 );
               },
-            ),
+            )
+
           ),
 
           // Right content area (fills remaining space)

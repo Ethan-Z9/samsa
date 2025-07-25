@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/clock/system_clock.dart';
 import 'package:frc_scout_app/user/user_menu.dart';
+import 'package:frc_scout_app/user/user_name.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -14,12 +15,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white, // Match your theme color here if needed
+        color: Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: Colors.grey, // Divider color
-            width: 0.5,         // Thin line
-          ),
+          bottom: BorderSide(color: Colors.grey, width: 0.5),
         ),
         boxShadow: [
           BoxShadow(
@@ -33,19 +31,23 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // 1. Left Side - Drawer Icon
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
+        title: SizedBox(
+          width: double.infinity,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Left - Drawer Icon
+              Positioned(
+                left: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
 
-            // 2. Middle - Clock with Title
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // Center - Clock + Title
+              Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SystemClock(),
                   Text(
@@ -54,13 +56,21 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ],
               ),
-            ),
 
-            // 3. Right Side - User Menu
-            const UserMenu(),
-          ],
+              // Right - Username + UserMenu
+              Positioned(
+                right: 0,
+                child: Row(
+                  children: const [
+                    UsernameDisplay(),
+                    UserMenu(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        centerTitle: true,
+        centerTitle: true, // can keep or remove since we control positioning now
       ),
     );
   }
