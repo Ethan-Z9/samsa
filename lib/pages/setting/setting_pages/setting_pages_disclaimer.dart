@@ -68,7 +68,7 @@ class SettingPagesDisclaimer extends StatelessWidget {
                   "• Data accuracy depends on scout input\n"
                   "• Historical records may be corrected\n"
                   
-                  "Policy last updated: ${DateTime.now().year}",
+                  "Policy last updated: July 25, 2025",
                   style: TextStyle(fontSize: 16, height: 1.5),
                 ),
               )

@@ -1,44 +1,41 @@
+// lib/form/basic_inputs/toggle_switch.dart
+
 import 'package:flutter/material.dart';
 
-class Counter extends StatefulWidget {
+class ToggleSwitch extends StatefulWidget {
   final String label;
-  final int initialValue;
-  final ValueChanged<int>? onChanged;
+  final String leftLabel;
+  final String rightLabel;
+  final bool initialValue;
+  final ValueChanged<bool>? onChanged;
   final Size? size;
 
-  const Counter({
+  const ToggleSwitch({
     super.key,
     required this.label,
-    this.initialValue = 0,
+    required this.leftLabel,
+    required this.rightLabel,
+    this.initialValue = false,
     this.onChanged,
     this.size,
   });
 
   @override
-  State<Counter> createState() => _CounterState();
+  State<ToggleSwitch> createState() => _ToggleSwitchState();
 }
 
-class _CounterState extends State<Counter> {
-  late int _count;
+class _ToggleSwitchState extends State<ToggleSwitch> {
+  late bool _value;
 
   @override
   void initState() {
     super.initState();
-    _count = widget.initialValue;
+    _value = widget.initialValue;
   }
 
-  void _increment() {
-    setState(() {
-      _count++;
-    });
-    widget.onChanged?.call(_count);
-  }
-
-  void _decrement() {
-    setState(() {
-      if (_count > 0) _count--;
-    });
-    widget.onChanged?.call(_count);
+  void _onChanged(bool newValue) {
+    setState(() => _value = newValue);
+    widget.onChanged?.call(newValue);
   }
 
   @override
@@ -56,22 +53,18 @@ class _CounterState extends State<Counter> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(widget.label, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: _decrement,
-                    icon: const Icon(Icons.remove),
+                  Text(widget.leftLabel),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: _value,
+                    onChanged: _onChanged,
                   ),
-                  Text(
-                    '$_count',
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                  IconButton(
-                    onPressed: _increment,
-                    icon: const Icon(Icons.add),
-                  ),
+                  const SizedBox(width: 8),
+                  Text(widget.rightLabel),
                 ],
               ),
             ],

@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 
-class Number extends StatefulWidget {
+class TextInput extends StatefulWidget {
   final String label;
-  final int? initialValue;
-  final ValueChanged<int>? onChanged;
+  final String? initialValue;
+  final ValueChanged<String>? onChanged;
+  final int maxLength;
   final Size? size;
 
-  const Number({
+  const TextInput({
     super.key,
     required this.label,
     this.initialValue,
     this.onChanged,
+    this.maxLength = 100,
     this.size,
   });
 
   @override
-  State<Number> createState() => _NumberState();
+  State<TextInput> createState() => _TextInputState();
 }
 
-class _NumberState extends State<Number> {
+class _TextInputState extends State<TextInput> {
   late TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.initialValue?.toString() ?? '',
-    );
+    _controller = TextEditingController(text: widget.initialValue ?? '');
   }
 
   @override
@@ -35,13 +35,8 @@ class _NumberState extends State<Number> {
     super.dispose();
   }
 
-  void _onTextChanged(String value) {
-    final intValue = int.tryParse(value);
-    if (intValue != null) {
-      widget.onChanged?.call(intValue);
-    } else if (value.isEmpty) {
-      widget.onChanged?.call(0);
-    }
+  void _onChanged(String value) {
+    widget.onChanged?.call(value);
   }
 
   @override
@@ -62,13 +57,14 @@ class _NumberState extends State<Number> {
               const SizedBox(height: 8),
               TextField(
                 controller: _controller,
-                keyboardType: TextInputType.number,
+                maxLength: widget.maxLength,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  counterText: '', // hides default counter text
                 ),
-                onChanged: _onTextChanged,
+                onChanged: _onChanged,
               ),
             ],
           ),

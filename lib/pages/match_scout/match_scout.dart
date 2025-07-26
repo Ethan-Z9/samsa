@@ -1,6 +1,19 @@
+// lib/pages/match_scout.dart
+
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/header/app_header.dart';
+import 'package:frc_scout_app/form/draggable_resizable_card.dart';
+import 'package:frc_scout_app/form/basic_inputs/counter.dart';
+import 'package:frc_scout_app/form/basic_inputs/number.dart';
+import 'package:frc_scout_app/form/basic_inputs/toggle_switch.dart';
+import 'package:frc_scout_app/form/basic_inputs/text_input.dart';
+
+
+
+
+
+
 
 class MatchScout extends StatelessWidget {
   const MatchScout({super.key});
@@ -9,8 +22,35 @@ class MatchScout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppHeader(title: 'Match Scout'),
-      body: const Center(child: Text('Content here')),
       drawer: const AppDrawer(),
+      body: Stack(
+        children: const [
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: Counter(label: 'Score Counter'),
+          ),
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: Number(label: 'Score Counter'),
+          ),
+          
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: ToggleSwitch(label: 'Power', leftLabel: 'Off', rightLabel: 'On'),
+          ),
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: TextInput(label: 'Comment'),
+          ),
+        ],
+      ),
     );
   }
 }

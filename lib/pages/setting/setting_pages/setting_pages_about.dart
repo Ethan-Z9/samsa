@@ -28,47 +28,20 @@ class SettingPagesAbout extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 child: SingleChildScrollView(
                 child: Text(
-                  "Data Usage Policy\n\n"
+                  "FRC Scouting Tool\n"
+                  "Built for the 2025-26 season by the Strategy Off-Season team\n\n"
                   
-                  "1. Purpose\n"
-                  "This app is a student-built tool for collecting and analyzing match data during FIRST Robotics Competition events.\n"
-                  "It is not affiliated with or endorsed by FIRST®.\n\n"
+                  "Purpose\n"
+                  "This app aims to Streamlines match data collection with offline-first reliability for competition environments.\n\n"
                   
-                  "2. Data Collection\n"
-                  "We store:\n"
-                  "• Scout names and school emails (for assignment tracking)\n"
-                  "• Match performance metrics (scores, timings, etc.)\n"
-                  "• Device info (for sync)\n\n"
-                  
-                  "3. Storage & Access\n"
-                  "• Active data: Stored locally on school-managed devices\n"
-                  "• Shared data: Uploaded to team-controlled Google Sheets\n"
-                  "• Access restricted to:\n"
-                  "   - Approved team members\n"
-                  "   - Staff & Mentors\n\n"
-                  "(Data sheet access, contact strategy head, or officers)\n"
+                  "Technical Stack\n"
+                  "Framework: Flutter ()\n"
+                  "Data Storage: [Hive/SQLite], Google Sheets\n"
+                  "Special Thanks: [Key Libraries/Packages]\n\n"
 
-                  "Violations of Data:\n"
-                  "• Using another user's credentials\n"
-                  "• Adding unauthorized accounts\n"
-                  "• Bypassing authentication methods\n\n"
-
-                  "4. Data Maintenance\n"
-                  "• Annual review: All scout accounts are purged after each season\n"
-                  "• New members: Added at start of competition season\n"
-                  "• Archived data: Anonymized after 2 years\n\n"
+                  "Contact:\n"
+                  "Bug Report: Ethan Zheng, ez3@icsd.k12.ny.us\n",
                   
-                  "5. Acceptable Use\n"
-                  "You agree to:\n"
-                  "• Use data only for team strategy development\n"
-                  "• Never share raw data outside the team\n"
-                  "• Report discrepancies to team captains\n\n"
-                  
-                  "6. Limitations\n"
-                  "• Data accuracy depends on scout input\n"
-                  "• Historical records may be corrected\n"
-                  
-                  "Policy last updated: ${DateTime.now().year}",
                   style: TextStyle(fontSize: 16, height: 1.5),
                 ),
               )
