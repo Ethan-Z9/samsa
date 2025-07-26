@@ -153,6 +153,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Text('LOGIN', style: TextStyle(fontSize: 16)),
                             ),
                           ),
+                          // Added data use notice here
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                                "By logging in, you agree to data use as outlined in Settings.",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[800],
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ],
                       ),
                     ),

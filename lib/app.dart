@@ -9,7 +9,7 @@ class FRCScoutApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FRC Scout',
+      title: 'SAMSA',
       initialRoute: '/',  // Splash screen as initial route
       routes: {
         '/': (context) => const SplashScreen(),
