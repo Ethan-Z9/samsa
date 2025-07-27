@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/header/app_header.dart';
+import 'package:frc_scout_app/pages/setting/setting_pages/setting_pages_customize_match_scout';
 import 'setting_pages/setting_pages_appearance.dart';
 import 'setting_pages/setting_pages_about.dart';
 import 'setting_pages/setting_pages_disclaimer.dart';
@@ -17,12 +18,14 @@ class _SettingState extends State<Setting> {
 
   final List<String> _titles = [
     'Appearance',
+    'Customize Match Scout',
     'Disclaimer',
     'About',
   ];
   
   final List<Widget> _pages = const [
     SettingPagesAppearance(),
+    CustomizeMatchScout(),
     SettingPagesDisclaimer(),
     SettingPagesAbout(),
   ];
