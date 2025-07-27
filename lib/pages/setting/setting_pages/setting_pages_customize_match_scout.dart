@@ -19,6 +19,7 @@ class CustomizeMatchScout extends StatefulWidget {
 
 class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   late List<FormConfig> _configs;
+  String? _selectedConfigName;
   final TextEditingController _nameController = TextEditingController();
   bool _setAsDefault = false;
 
@@ -29,6 +30,14 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   void initState() {
     super.initState();
     _configs = List.from(widget.formConfigs);
+    _loadAllConfigNames();
+  }
+
+  Map<String, List<FormConfig>> _allConfigs = {};
+
+  Future<void> _loadAllConfigNames() async {
+    _allConfigs = await _loadAllConfigs();
+    setState(() {}); // Update dropdown when ready
   }
 
   Future<Map<String, List<FormConfig>>> _loadAllConfigs() async {
@@ -60,11 +69,6 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   Future<void> _saveDefaultConfigName(String name) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(defaultConfigNameKey, name);
-  }
-
-  Future<String?> _loadDefaultConfigName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(defaultConfigNameKey);
   }
 
   void _addFormInput(FormType type) async {
@@ -143,7 +147,6 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
       return;
     }
 
-    // Ask for config name and default option
     _nameController.clear();
     _setAsDefault = false;
 
@@ -187,20 +190,61 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
     );
 
     if (saveResult == true) {
-      final prefs = await SharedPreferences.getInstance();
       final allConfigs = await _loadAllConfigs();
-
-      allConfigs[_nameController.text.trim()] = _configs;
+      final name = _nameController.text.trim();
+      allConfigs[name] = _configs;
 
       await _saveAllConfigs(allConfigs);
+      if (_setAsDefault) await _saveDefaultConfigName(name);
 
-      if (_setAsDefault) {
-        await _saveDefaultConfigName(_nameController.text.trim());
-      }
+      await _loadAllConfigNames();
+      setState(() {
+        _selectedConfigName = name;
+      });
 
       widget.onUpdate(_configs);
 
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved!')));
+    }
+  }
+
+  void _deleteSelectedConfig() async {
+    if (_selectedConfigName == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Configuration'),
+        content: Text('Are you sure you want to delete "$_selectedConfigName"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final prefs = await SharedPreferences.getInstance();
+      _allConfigs.remove(_selectedConfigName);
+      await _saveAllConfigs(_allConfigs);
+
+      setState(() {
+        _selectedConfigName = null;
+        _configs = [];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted!')));
+    }
+  }
+
+  void _loadSelectedConfig(String name) {
+    final selected = _allConfigs[name];
+    if (selected != null) {
+      setState(() {
+        _configs = List.from(selected);
+        _selectedConfigName = name;
+      });
+      widget.onUpdate(_configs);
     }
   }
 
@@ -214,6 +258,35 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
           child: Text('Customize Match Scout Layout',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: DropdownButton<String>(
+                  value: _selectedConfigName,
+                  isExpanded: true,
+                  hint: const Text('Select a config'),
+                  items: _allConfigs.keys.map((name) {
+                    return DropdownMenuItem(
+                      value: name,
+                      child: Text(name),
+                    );
+                  }).toList(),
+                  onChanged: (name) {
+                    if (name != null) _loadSelectedConfig(name);
+                  },
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: 'Delete Config',
+                onPressed: _selectedConfigName == null ? null : _deleteSelectedConfig,
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
         Expanded(
           child: ListView.builder(
             itemCount: _configs.length,
