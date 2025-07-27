@@ -4,16 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/header/app_header.dart';
 import 'package:frc_scout_app/form/draggable_resizable_card.dart';
+
 import 'package:frc_scout_app/form/basic_inputs/counter.dart';
 import 'package:frc_scout_app/form/basic_inputs/number.dart';
 import 'package:frc_scout_app/form/basic_inputs/toggle_switch.dart';
 import 'package:frc_scout_app/form/basic_inputs/text_input.dart';
 
+import 'package:frc_scout_app/form/selection_inputs/checkbox.dart';
+import 'package:frc_scout_app/form/selection_inputs/radio.dart';
+import 'package:frc_scout_app/form/selection_inputs/selection.dart';
+import 'package:frc_scout_app/form/selection_inputs/slider.dart';
+
+import '';
 
 
-
-
-
+import '';
 
 class MatchScout extends StatelessWidget {
   const MatchScout({super.key});
@@ -35,7 +40,7 @@ class MatchScout extends StatelessWidget {
           DraggableResizableCard(
             initialWidth: 250,
             initialHeight: 200,
-            child: Number(label: 'Score Counter'),
+            child: Number(label: 'Score Total'),
           ),
           
           DraggableResizableCard(
@@ -49,6 +54,35 @@ class MatchScout extends StatelessWidget {
             initialHeight: 200,
             child: TextInput(label: 'Comment'),
           ),
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: CheckboxInput(label: 'Check'),
+          ),
+
+          /*DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: Radio(label: 'Comment'),
+          ),
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: Selection(label: 'Comment'),
+          ),*/
+
+          DraggableResizableCard(
+            initialWidth: 250,
+            initialHeight: 200,
+            child: SliderInput(label: 'Slider'),
+          ),
+
+
+
+
+
         ],
       ),
     );
