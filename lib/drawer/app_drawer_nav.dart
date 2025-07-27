@@ -14,15 +14,7 @@ class AppDrawerNav extends StatelessWidget {
     return ListView(
       children: [
         _buildNavTile(context, Icons.dashboard, 'Dashboard', const Dashboard()),
-
-        // Pass empty list for formConfigs for now
-        _buildNavTile(
-          context,
-          Icons.assignment,
-          'Match Scout',
-          MatchScout(formConfigs: []),
-        ),
-
+        _buildNavTile(context, Icons.assignment, 'Match Scout', const MatchScout()),
         _buildNavTile(context, Icons.build, 'Pit Scout', const PitScout()),
         _buildNavTile(context, Icons.visibility, 'View Data', const ViewData()),
         _buildNavTile(context, Icons.import_export, 'Import / Export', const ImportExport()),

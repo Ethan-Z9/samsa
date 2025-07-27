@@ -1,0 +1,33 @@
+[
+    {
+        "type": "Counter",
+        "label": "Red Team Goals Scored"
+    },
+    {
+        "type": "Counter",
+        "label": "Blue Team Goals Scored"
+    },
+    {
+        "type": "Counter",
+        "label": "Red Team Yellow Cards"
+    },
+    {
+        "type": "Counter",
+        "label": "Blue Team Yellow Cards"
+    },
+    {
+
+    },
+    {
+
+    },
+    {
+
+    },
+    {
+
+    },
+    {
+
+    }
+]
