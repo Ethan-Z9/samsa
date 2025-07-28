@@ -80,6 +80,8 @@ class _MatchScoutState extends State<MatchScout> {
   // User info (example hardcoded, replace with your auth/user system)
   final String _userName = "John Doe";
   final String _userEmail = "john.doe@example.com";
+  
+  get divisions => null;
 
   @override
   void initState() {
@@ -425,11 +427,11 @@ class _MatchScoutState extends State<MatchScout> {
   Widget _buildWidget(FormConfig config) {
     switch (config.type) {
       case FormType.counter:
-        return Counter(label: config.label);
+        return CounterInput(label: config.label);
       case FormType.number:
-        return Number(label: config.label);
-      case FormType.switchInput:
-        return ToggleSwitch(
+        return NumberInput(label: config.label);
+      case FormType.lever:
+        return SwitchInput(
           label: config.label,
           leftLabel: config.extraParams['leftLabel'] ?? 'Off',
           rightLabel: config.extraParams['rightLabel'] ?? 'On',
@@ -440,23 +442,16 @@ class _MatchScoutState extends State<MatchScout> {
         return CheckboxInput(label: config.label);
       case FormType.radio:
         final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
-        final optionsMap = Map.fromIterables(
-          List.generate(optionsList.length, (index) => index),
-          optionsList,
-        );
-        return RadioInput(label: config.label, options: optionsMap);
-      case FormType.selection:
+        return RadioInput(label: config.label, options: optionsList);
+      case FormType.dropdown:
         final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
-        final optionsMap = Map.fromIterables(
-          List.generate(optionsList.length, (index) => index),
-          optionsList,
-        );
-        return Selection(label: config.label, options: optionsMap);
+        return DropdownInput(label: config.label, options: optionsList);
       case FormType.slider:
         return SliderInput(
           label: config.label,
           min: config.extraParams['min'] ?? 0,
           max: config.extraParams['max'] ?? 10,
+          divisions: divisions,
         );
       case FormType.date:
         return DateInput(label: config.label);

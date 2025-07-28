@@ -87,7 +87,7 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
                 controller: controller,
                 decoration: const InputDecoration(labelText: 'Label'),
               ),
-              if (type == FormType.switchInput) ...[
+              if (type == FormType.lever) ...[
                 TextField(
                   decoration: const InputDecoration(labelText: 'Left Label'),
                   onChanged: (value) => extraParams['leftLabel'] = value,
@@ -96,7 +96,7 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
                   decoration: const InputDecoration(labelText: 'Right Label'),
                   onChanged: (value) => extraParams['rightLabel'] = value,
                 ),
-              ] else if (type == FormType.radio || type == FormType.selection) ...[
+              ] else if (type == FormType.radio || type == FormType.dropdown) ...[
                 TextField(
                   decoration: const InputDecoration(labelText: 'Options (comma separated)'),
                   onChanged: (value) => extraParams['options'] =

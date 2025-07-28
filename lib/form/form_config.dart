@@ -1,18 +1,17 @@
-import 'dart:convert';
 
 enum FormType {
   counter,
   number,
-  switchInput,
+  lever,
   text,
   checkbox,
   radio,
-  selection,
+  dropdown,
   slider,
   date,
   time,
   stopwatch,
-  grid, // for later
+  grid,
 }
 
 class FormConfig {
