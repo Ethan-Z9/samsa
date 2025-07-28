@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:frc_scout_app/form/form_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frc_scout_app/form/form_config.dart';
 
 class CustomizeMatchScout extends StatefulWidget {
   final List<FormConfig> formConfigs;
@@ -26,6 +26,8 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   static const savedConfigsKey = 'saved_form_configs';
   static const defaultConfigNameKey = 'default_form_config_name';
 
+  Map<String, List<FormConfig>> _allConfigs = {};
+
   @override
   void initState() {
     super.initState();
@@ -33,11 +35,9 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
     _loadAllConfigNames();
   }
 
-  Map<String, List<FormConfig>> _allConfigs = {};
-
   Future<void> _loadAllConfigNames() async {
     _allConfigs = await _loadAllConfigs();
-    setState(() {}); // Update dropdown when ready
+    setState(() {});
   }
 
   Future<Map<String, List<FormConfig>>> _loadAllConfigs() async {
@@ -99,8 +99,8 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
               ] else if (type == FormType.radio || type == FormType.dropdown) ...[
                 TextField(
                   decoration: const InputDecoration(labelText: 'Options (comma separated)'),
-                  onChanged: (value) => extraParams['options'] =
-                      value.split(',').map((s) => s.trim()).toList(),
+                  onChanged: (value) =>
+                      extraParams['options'] = value.split(',').map((s) => s.trim()).toList(),
                 ),
               ] else if (type == FormType.slider) ...[
                 TextField(
@@ -122,8 +122,7 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                final config =
-                    FormConfig(type: type, label: controller.text, extraParams: extraParams);
+                final config = FormConfig(type: type, label: controller.text, extraParams: extraParams);
                 Navigator.pop(context, config);
               }
             },

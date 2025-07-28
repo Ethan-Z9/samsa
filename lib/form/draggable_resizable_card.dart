@@ -8,8 +8,8 @@ class DraggableResizableCard extends StatefulWidget {
   const DraggableResizableCard({
     super.key,
     required this.child,
-    this.initialWidth = 200,
-    this.initialHeight = 150,
+    this.initialWidth = 250,
+    this.initialHeight = 200,
   });
 
   @override
@@ -55,37 +55,24 @@ class _DraggableResizableCardState extends State<DraggableResizableCard> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth: constraints.maxWidth,
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: widget.child,
-                      ),
-                    ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: widget.child,
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onPanUpdate: _onResize,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(Icons.drag_handle, size: 18),
                   ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onPanUpdate: _onResize,
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(Icons.drag_handle, size: 18),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                ),
+              ),
+            ],
           ),
         ),
       ),

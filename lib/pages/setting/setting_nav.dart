@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frc_scout_app/pages/setting/setting_pages/setting_pages_customize_match_scout.dart';
+import 'setting_pages/setting_pages_customize_match_scout.dart';
 import 'setting_pages/setting_pages_appearance.dart';
 import 'setting_pages/setting_pages_about.dart';
 import 'setting_pages/setting_pages_disclaimer.dart';

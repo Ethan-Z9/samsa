@@ -8,7 +8,7 @@ import 'package:frc_scout_app/form/draggable_resizable_card.dart';
 
 import 'package:frc_scout_app/form/basic_inputs/counter_input.dart';
 import 'package:frc_scout_app/form/basic_inputs/number_input.dart';
-import 'package:frc_scout_app/form/basic_inputs/switch_input.dart';
+import 'package:frc_scout_app/form/basic_inputs/lever_input.dart';
 import 'package:frc_scout_app/form/basic_inputs/text_input.dart';
 import 'package:frc_scout_app/form/selection_inputs/checkbox_input.dart';
 import 'package:frc_scout_app/form/selection_inputs/radio_input.dart';
@@ -77,10 +77,16 @@ class _MatchScoutState extends State<MatchScout> {
   Map<String, MatchRecord> _savedRecords = {};
   MatchRecord? _currentRecord;
 
+  // Track if current record has unsaved changes
+  bool _isCurrentRecordSaved = true;
+
+  // Map to hold live input values keyed by FormConfig label
+  Map<String, dynamic> _formValues = {};
+
   // User info (example hardcoded, replace with your auth/user system)
   final String _userName = "John Doe";
   final String _userEmail = "john.doe@example.com";
-  
+
   get divisions => null;
 
   @override
@@ -144,6 +150,8 @@ class _MatchScoutState extends State<MatchScout> {
       _selectedConfigName = name;
       _currentConfig = _savedConfigs[name] ?? [];
       _currentRecord = null; // reset current record when config changes
+      _isCurrentRecordSaved = true;
+      _formValues.clear();
     });
   }
 
@@ -163,11 +171,13 @@ class _MatchScoutState extends State<MatchScout> {
         userEmail: _userEmail,
         formData: {}, // empty form data initially
       );
+      _isCurrentRecordSaved = false;
+      _formValues.clear();
     });
   }
 
   Future<bool> _promptSaveCurrentRecord() async {
-    if (_currentRecord == null) return true;
+    if (_currentRecord == null || _isCurrentRecordSaved) return true;
 
     final save = await showDialog<bool>(
       context: context,
@@ -190,6 +200,8 @@ class _MatchScoutState extends State<MatchScout> {
         await _saveRecords();
         setState(() {
           _currentRecord = null;
+          _isCurrentRecordSaved = true;
+          _formValues.clear();
         });
         return true;
       } else {
@@ -247,11 +259,13 @@ class _MatchScoutState extends State<MatchScout> {
                               Navigator.pop(context);
                               setState(() {
                                 _currentRecord = record;
+                                _formValues = Map<String, dynamic>.from(record.formData);
                                 // Load config for this record if exists, else fallback to first config
                                 if (_savedConfigs.containsKey(_selectedConfigName)) {
                                   _currentConfig = _savedConfigs[_selectedConfigName!]!;
                                 }
                                 _selectedConfigName ??= _savedConfigs.keys.isNotEmpty ? _savedConfigs.keys.first : null;
+                                _isCurrentRecordSaved = true;
                               });
                             },
                             trailing: IconButton(
@@ -275,6 +289,8 @@ class _MatchScoutState extends State<MatchScout> {
                                   await _saveRecords();
                                   if (_currentRecord?.recordName == record.recordName) {
                                     _currentRecord = null;
+                                    _formValues.clear();
+                                    _isCurrentRecordSaved = true;
                                   }
                                   Navigator.pop(context); // close bottom sheet
                                 }
@@ -349,10 +365,12 @@ class _MatchScoutState extends State<MatchScout> {
                 TextField(
                   controller: matchNumberController,
                   decoration: const InputDecoration(labelText: 'Match Number'),
+                  onChanged: (val) => _markCurrentRecordDirty(label: 'Match Number', value: val),
                 ),
                 TextField(
                   controller: robotNumberController,
                   decoration: const InputDecoration(labelText: 'Robot Number'),
+                  onChanged: (val) => _markCurrentRecordDirty(label: 'Robot Number', value: val),
                 ),
                 Row(
                   children: [
@@ -362,7 +380,10 @@ class _MatchScoutState extends State<MatchScout> {
                         title: Text(isRedAlliance ? 'Red' : 'Blue'),
                         value: isRedAlliance,
                         onChanged: (val) {
-                          setStateSB(() => isRedAlliance = val);
+                          setStateSB(() {
+                            isRedAlliance = val;
+                          });
+                          _markCurrentRecordDirty(label: 'Alliance', value: val);
                         },
                       ),
                     ),
@@ -411,54 +432,94 @@ class _MatchScoutState extends State<MatchScout> {
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
       await _saveRecords();
 
+      _isCurrentRecordSaved = true;
+
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record saved!')));
       setState(() {});
     }
   }
 
-  // This collects current form values into a Map keyed by label (customize as needed)
+  // This collects current form values into a Map keyed by label
   Map<String, dynamic> _collectFormData() {
-    // For demo, return empty map (you need to connect this to your actual input widgets and their states)
-    // You will need to store state of each input widget (controller values, selected options, etc.)
-    // and collect them here to save in the record.
-    return {};
+    return _formValues;
+  }
+
+  // Mark the record dirty and store changed values
+  void _markCurrentRecordDirty({required String label, dynamic value}) {
+    if (_isCurrentRecordSaved) {
+      setState(() {
+        _isCurrentRecordSaved = false;
+      });
+    }
+    _formValues[label] = value;
   }
 
   Widget _buildWidget(FormConfig config) {
     switch (config.type) {
       case FormType.counter:
-        return CounterInput(label: config.label);
+        return CounterInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.number:
-        return NumberInput(label: config.label);
+        return NumberInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.lever:
-        return SwitchInput(
+        return LeverInput(
           label: config.label,
           leftLabel: config.extraParams['leftLabel'] ?? 'Off',
           rightLabel: config.extraParams['rightLabel'] ?? 'On',
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.text:
-        return TextInput(label: config.label);
+        return TextInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.checkbox:
-        return CheckboxInput(label: config.label);
+        return CheckboxInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.radio:
         final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
-        return RadioInput(label: config.label, options: optionsList);
+        return RadioInput(
+          label: config.label,
+          options: optionsList,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.dropdown:
         final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
-        return DropdownInput(label: config.label, options: optionsList);
+        return DropdownInput(
+          label: config.label,
+          options: optionsList,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.slider:
         return SliderInput(
           label: config.label,
           min: config.extraParams['min'] ?? 0,
           max: config.extraParams['max'] ?? 10,
           divisions: divisions,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.date:
-        return DateInput(label: config.label);
+        return DateInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.time:
-        return TimeInput(label: config.label);
+        return TimeInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       case FormType.stopwatch:
-        return StopwatchInput(label: config.label);
+        return StopwatchInput(
+          label: config.label,
+          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -472,27 +533,28 @@ class _MatchScoutState extends State<MatchScout> {
       body: Stack(
         children: _currentConfig.map((config) {
           return DraggableResizableCard(
+            key: ValueKey(config.label),
             initialWidth: 250,
             initialHeight: 200,
             child: _buildWidget(config),
           );
         }).toList(),
       ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            heroTag: 'save_btn',
+            heroTag: 'record_manager',
+            onPressed: _openRecordManager,
+            tooltip: 'Manage Records',
+            child: const Icon(Icons.folder_open),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'save_record',
             onPressed: _saveCurrentRecord,
             tooltip: 'Save Record',
             child: const Icon(Icons.save),
-          ),
-          const SizedBox(width: 12),
-          FloatingActionButton(
-            heroTag: 'record_manager_btn',
-            onPressed: _openRecordManager,
-            tooltip: 'Open Record Manager',
-            child: const Icon(Icons.add),
           ),
         ],
       ),

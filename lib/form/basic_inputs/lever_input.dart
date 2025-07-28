@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class SwitchInput extends StatefulWidget {
+class LeverInput extends StatefulWidget {
   final String label;
   final String leftLabel;
   final String rightLabel;
   final bool initialValue;
   final ValueChanged<bool>? onChanged;
 
-  const SwitchInput({
+  const LeverInput({
     super.key,
     required this.label,
     this.leftLabel = 'Off',
@@ -17,10 +17,10 @@ class SwitchInput extends StatefulWidget {
   });
 
   @override
-  State<SwitchInput> createState() => _SwitchInputState();
+  State<LeverInput> createState() => _LeverInputState();
 }
 
-class _SwitchInputState extends State<SwitchInput> {
+class _LeverInputState extends State<LeverInput> {
   late bool _value;
 
   @override
