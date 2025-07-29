@@ -6,8 +6,12 @@ class RecordStorage {
   static Future<Directory> _getRecordsDir() async {
     final appDocDir = await getApplicationDocumentsDirectory();
     final recordsDir = Directory('${appDocDir.path}/match_records');
+    print('Trying to get/create folder at: ${recordsDir.path}');  // Add this line
     if (!await recordsDir.exists()) {
+      print('Folder does not exist. Creating folder now...');
       await recordsDir.create(recursive: true);
+    } else {
+      print('Folder already exists.');
     }
     return recordsDir;
   }

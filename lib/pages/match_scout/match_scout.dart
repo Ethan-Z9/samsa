@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:frc_scout_app/record/record_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:frc_scout_app/header/app_header.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/form/form_config.dart';
@@ -25,7 +27,7 @@ class MatchRecord {
   bool isRedAlliance;
   String userName;
   String userEmail;
-  Map<String, dynamic> formData; // key = FormConfig label or ID, value = entered data
+  Map<String, dynamic> formData;
 
   MatchRecord({
     required this.recordName,
@@ -66,7 +68,6 @@ class MatchScout extends StatefulWidget {
 }
 
 class _MatchScoutState extends State<MatchScout> {
-  // Keys for SharedPreferences
   static const savedConfigsKey = 'saved_form_configs';
   static const savedRecordsKey = 'saved_match_records';
 
@@ -77,13 +78,10 @@ class _MatchScoutState extends State<MatchScout> {
   Map<String, MatchRecord> _savedRecords = {};
   MatchRecord? _currentRecord;
 
-  // Track if current record has unsaved changes
   bool _isCurrentRecordSaved = true;
 
-  // Map to hold live input values keyed by FormConfig label
   Map<String, dynamic> _formValues = {};
 
-  // User info (example hardcoded, replace with your auth/user system)
   final String _userName = "John Doe";
   final String _userEmail = "john.doe@example.com";
 
@@ -149,7 +147,7 @@ class _MatchScoutState extends State<MatchScout> {
     setState(() {
       _selectedConfigName = name;
       _currentConfig = _savedConfigs[name] ?? [];
-      _currentRecord = null; // reset current record when config changes
+      _currentRecord = null;
       _isCurrentRecordSaved = true;
       _formValues.clear();
     });
@@ -169,7 +167,7 @@ class _MatchScoutState extends State<MatchScout> {
         isRedAlliance: true,
         userName: _userName,
         userEmail: _userEmail,
-        formData: {}, // empty form data initially
+        formData: {},
       );
       _isCurrentRecordSaved = false;
       _formValues.clear();
@@ -260,7 +258,6 @@ class _MatchScoutState extends State<MatchScout> {
                               setState(() {
                                 _currentRecord = record;
                                 _formValues = Map<String, dynamic>.from(record.formData);
-                                // Load config for this record if exists, else fallback to first config
                                 if (_savedConfigs.containsKey(_selectedConfigName)) {
                                   _currentConfig = _savedConfigs[_selectedConfigName!]!;
                                 }
@@ -292,7 +289,7 @@ class _MatchScoutState extends State<MatchScout> {
                                     _formValues.clear();
                                     _isCurrentRecordSaved = true;
                                   }
-                                  Navigator.pop(context); // close bottom sheet
+                                  Navigator.pop(context);
                                 }
                               },
                             ),
@@ -303,7 +300,6 @@ class _MatchScoutState extends State<MatchScout> {
               ElevatedButton(
                 onPressed: () async {
                   Navigator.pop(context);
-                  // Show config selector dialog for new record
                   final selectedConfig = await showDialog<String>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -416,7 +412,6 @@ class _MatchScoutState extends State<MatchScout> {
         ..userName = _userName
         ..userEmail = _userEmail;
 
-      // Save form data before saving record
       _currentRecord!.formData = _collectFormData();
 
       if (_currentRecord!.recordName.trim().isEmpty) {
@@ -430,6 +425,11 @@ class _MatchScoutState extends State<MatchScout> {
       }
 
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
+
+      // Save to local JSON file here:
+      await RecordStorage.saveRecord(_currentRecord!.recordName, _currentRecord!.toJson());
+
+      // Also keep the SharedPreferences backup if you want
       await _saveRecords();
 
       _isCurrentRecordSaved = true;
@@ -439,12 +439,10 @@ class _MatchScoutState extends State<MatchScout> {
     }
   }
 
-  // This collects current form values into a Map keyed by label
   Map<String, dynamic> _collectFormData() {
     return _formValues;
   }
 
-  // Mark the record dirty and store changed values
   void _markCurrentRecordDirty({required String label, dynamic value}) {
     if (_isCurrentRecordSaved) {
       setState(() {
