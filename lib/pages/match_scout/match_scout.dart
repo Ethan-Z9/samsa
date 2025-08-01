@@ -161,7 +161,7 @@ class _MatchScoutState extends State<MatchScout> {
       _selectedConfigName = configName;
       _currentConfig = config;
       _currentRecord = MatchRecord(
-        recordName: '',
+        recordName: 'New Record ${DateTime.now().toString()}',
         matchNumber: '',
         robotNumber: '',
         isRedAlliance: true,
@@ -191,41 +191,17 @@ class _MatchScoutState extends State<MatchScout> {
     );
 
     if (save == true) {
-      final tempName = await _promptTempName();
-      if (tempName != null && tempName.trim().isNotEmpty) {
-        _currentRecord!.recordName = tempName.trim();
-        _savedRecords[tempName] = _currentRecord!;
-        await _saveRecords();
-        setState(() {
-          _currentRecord = null;
-          _isCurrentRecordSaved = true;
-          _formValues.clear();
-        });
-        return true;
-      } else {
-        return false;
-      }
+      _currentRecord!.formData = _collectFormData();
+      _savedRecords[_currentRecord!.recordName] = _currentRecord!;
+      await _saveRecords();
+      setState(() {
+        _currentRecord = null;
+        _isCurrentRecordSaved = true;
+        _formValues.clear();
+      });
+      return true;
     }
     return save ?? false;
-  }
-
-  Future<String?> _promptTempName() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter temporary record name'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Temp record name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save')),
-        ],
-      ),
-    );
-    return result;
   }
 
   Future<void> _openRecordManager() async {
@@ -385,6 +361,14 @@ class _MatchScoutState extends State<MatchScout> {
                     ),
                   ],
                 ),
+                TextField(
+                  decoration: const InputDecoration(labelText: 'Record Name'),
+                  controller: TextEditingController(text: _currentRecord!.recordName),
+                  onChanged: (val) {
+                    _currentRecord!.recordName = val;
+                    _markCurrentRecordDirty(label: 'Record Name', value: val);
+                  },
+                ),
                 ListTile(
                   title: const Text('User Name'),
                   subtitle: Text(_userName),
@@ -415,13 +399,7 @@ class _MatchScoutState extends State<MatchScout> {
       _currentRecord!.formData = _collectFormData();
 
       if (_currentRecord!.recordName.trim().isEmpty) {
-        final tempName = await _promptTempName();
-        if (tempName == null || tempName.trim().isEmpty) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('You must provide a record name.')));
-          return;
-        }
-        _currentRecord!.recordName = tempName.trim();
+        _currentRecord!.recordName = 'New Record ${DateTime.now().toString()}';
       }
 
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
