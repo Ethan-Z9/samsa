@@ -7,6 +7,7 @@ class DashboardPanelNav extends StatefulWidget {
   final Function(int?)? onTeamHighlight;
   final Function(String?)? onScoutHighlight;
   final Function(bool)? onUserScoutToggle;
+  final Function(String)? onDatasetSwitch;
 
   const DashboardPanelNav({
     super.key,
@@ -16,6 +17,7 @@ class DashboardPanelNav extends StatefulWidget {
     this.onTeamHighlight,
     this.onScoutHighlight,
     this.onUserScoutToggle,
+    this.onDatasetSwitch, required String selectedDatasetKey, required void Function(String key) onDatasetSelected,
   });
 
   @override
@@ -26,15 +28,13 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
   final _teamSearchController = TextEditingController();
   final _scoutSearchController = TextEditingController();
   bool _highlightUserScout = false;
+  String _selectedDataset = 'flr';
 
-  String _shortenScoutEmail(String email) {
-    final prefix = email.split('@')[0];
-    final letters = prefix.replaceAll(RegExp(r'\d'), '');
-    final firstTwoLetters = letters.length >= 2 ? letters.substring(0, 2) : letters;
-    final digits = prefix.replaceAll(RegExp(r'\D'), '');
-    final firstDigit = digits.isNotEmpty ? digits[0] : '';
-    return '$firstTwoLetters$firstDigit'.toLowerCase();
-  }
+  final Map<String, String> _datasetLabels = {
+    'flr': 'FLR',
+    'tvr': 'TVR',
+    'champs': 'Champs',
+  };
 
   void _scrollToTop() {
     widget.scrollController.animateTo(
@@ -67,6 +67,27 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Dataset Selector
+          const Text('Event Dataset', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: _selectedDataset,
+            isExpanded: true,
+            items: _datasetLabels.entries.map((entry) {
+              return DropdownMenuItem<String>(
+                value: entry.key,
+                child: Text(entry.value),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedDataset = value);
+                widget.onDatasetSwitch?.call(value);
+              }
+            },
+          ),
+          const Divider(height: 32),
+
           // Navigation Controls
           const Text('Navigation', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),

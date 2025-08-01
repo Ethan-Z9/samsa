@@ -27,11 +27,10 @@ class CSVLoader {
     }
   }
 
-  /// Loads the matches_flr.csv file dynamically and returns
-  /// a List of Maps where each map corresponds to a row keyed by column headers.
-  static Future<List<Map<String, dynamic>>> loadMatchsFLR() async {
+  /// Generic CSV loader given a filename (without path)
+  static Future<List<Map<String, dynamic>>> _loadMatchFile(String fileName) async {
     try {
-      final csvString = await rootBundle.loadString('assets/csv/matches_flr.csv');
+      final csvString = await rootBundle.loadString('assets/csv/$fileName');
       final rows = const CsvToListConverter().convert(csvString);
 
       if (rows.isEmpty) throw Exception('CSV file is empty');
@@ -46,8 +45,17 @@ class CSVLoader {
         return rowMap;
       }).toList();
     } catch (e) {
-      debugPrint('CSV Load Error (matches_flr): $e');
+      debugPrint('CSV Load Error ($fileName): $e');
       rethrow;
     }
   }
+
+  static Future<List<Map<String, dynamic>>> loadMatchsFLR() =>
+      _loadMatchFile('matches_flr.csv');
+
+  static Future<List<Map<String, dynamic>>> loadMatchsTVR() =>
+      _loadMatchFile('matches_tvr.csv');
+
+  static Future<List<Map<String, dynamic>>> loadMatchsChamps() =>
+      _loadMatchFile('matches_champs.csv');
 }

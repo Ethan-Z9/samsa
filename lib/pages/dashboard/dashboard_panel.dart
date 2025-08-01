@@ -18,6 +18,7 @@ class _DashboardPanelState extends State<DashboardPanel> {
   String? _highlightedScout;
   bool _highlightUserScout = false;
   late Future<String?> _currentUserScoutFuture;
+  String _selectedDataset = 'flr';
 
   final Map<String, String> _columnDisplayNames = {
     'match': 'Match #',
@@ -38,14 +39,26 @@ class _DashboardPanelState extends State<DashboardPanel> {
   @override
   void initState() {
     super.initState();
-    _matchDataFuture = CSVLoader.loadMatchsFLR();
-    _currentUserScoutFuture = AuthService().getCurrentEmail(); // Using getCurrentEmail() instead
+    _currentUserScoutFuture = AuthService().getCurrentEmail();
+    _matchDataFuture = _loadDataForDataset(_selectedDataset);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<List<Map<String, dynamic>>> _loadDataForDataset(String datasetKey) {
+    switch (datasetKey) {
+      case 'tvr':
+        return CSVLoader.loadMatchsTVR();
+      case 'champs':
+        return CSVLoader.loadMatchsChamps();
+      case 'flr':
+      default:
+        return CSVLoader.loadMatchsFLR();
+    }
   }
 
   String shortenScoutEmail(String email) {
@@ -57,13 +70,20 @@ class _DashboardPanelState extends State<DashboardPanel> {
     return '$firstTwoLetters$firstDigit';
   }
 
+  void _onDatasetSelected(String key) {
+    setState(() {
+      _selectedDataset = key;
+      _matchDataFuture = _loadDataForDataset(key);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String?>(
       future: _currentUserScoutFuture,
       builder: (context, scoutSnapshot) {
         final currentUserScout = scoutSnapshot.data;
-        
+
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -75,12 +95,10 @@ class _DashboardPanelState extends State<DashboardPanel> {
               onScoutHighlight: (scout) => setState(() => _highlightedScout = scout),
               onUserScoutToggle: (value) => setState(() {
                 _highlightUserScout = value ?? false;
-                if (_highlightUserScout) {
-                  _highlightedScout = currentUserScout;
-                } else {
-                  _highlightedScout = null;
-                }
+                _highlightedScout = _highlightUserScout ? currentUserScout : null;
               }),
+              selectedDatasetKey: _selectedDataset,
+              onDatasetSelected: _onDatasetSelected,
             ),
             Expanded(
               child: Center(
@@ -114,17 +132,15 @@ class _DashboardPanelState extends State<DashboardPanel> {
 
                       return Column(
                         children: [
-                          // Header Row
                           Container(
                             color: Colors.grey[200],
                             child: Table(
                               border: TableBorder.symmetric(
                                 inside: const BorderSide(color: Colors.grey, width: 1),
                               ),
-                              columnWidths: Map.fromIterables(
-                                List.generate(headers.length, (i) => i),
-                                List.generate(headers.length, (i) => const FlexColumnWidth(1)),
-                              ),
+                              columnWidths: {
+                                for (int i = 0; i < headers.length; i++) i: const FlexColumnWidth(1)
+                              },
                               children: [
                                 TableRow(
                                   children: headers.map((key) {
@@ -141,8 +157,6 @@ class _DashboardPanelState extends State<DashboardPanel> {
                               ],
                             ),
                           ),
-
-                          // Data Rows with vertical scroll
                           Expanded(
                             child: Scrollbar(
                               controller: _scrollController,
@@ -152,10 +166,9 @@ class _DashboardPanelState extends State<DashboardPanel> {
                                 scrollDirection: Axis.vertical,
                                 child: Table(
                                   border: TableBorder.all(color: Colors.grey, width: 1),
-                                  columnWidths: Map.fromIterables(
-                                    List.generate(headers.length, (i) => i),
-                                    List.generate(headers.length, (i) => const FlexColumnWidth(1)),
-                                  ),
+                                  columnWidths: {
+                                    for (int i = 0; i < headers.length; i++) i: const FlexColumnWidth(1)
+                                  },
                                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                                   children: data.map((row) {
                                     return TableRow(
