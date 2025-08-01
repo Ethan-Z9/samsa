@@ -7,7 +7,9 @@ class DashboardPanelNav extends StatefulWidget {
   final Function(int?)? onTeamHighlight;
   final Function(String?)? onScoutHighlight;
   final Function(bool)? onUserScoutToggle;
-  final Function(String)? onDatasetSwitch;
+
+  final String selectedDatasetKey;
+  final Function(String) onDatasetSelected;
 
   const DashboardPanelNav({
     super.key,
@@ -17,7 +19,8 @@ class DashboardPanelNav extends StatefulWidget {
     this.onTeamHighlight,
     this.onScoutHighlight,
     this.onUserScoutToggle,
-    this.onDatasetSwitch, required String selectedDatasetKey, required void Function(String key) onDatasetSelected,
+    required this.selectedDatasetKey,
+    required this.onDatasetSelected,
   });
 
   @override
@@ -28,13 +31,23 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
   final _teamSearchController = TextEditingController();
   final _scoutSearchController = TextEditingController();
   bool _highlightUserScout = false;
-  String _selectedDataset = 'flr';
 
-  final Map<String, String> _datasetLabels = {
-    'flr': 'FLR',
-    'tvr': 'TVR',
-    'champs': 'Champs',
-  };
+  late String _selectedDataset;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDataset = widget.selectedDatasetKey;
+  }
+
+  String _shortenScoutEmail(String email) {
+    final prefix = email.split('@')[0];
+    final letters = prefix.replaceAll(RegExp(r'\d'), '');
+    final firstTwoLetters = letters.length >= 2 ? letters.substring(0, 2) : letters;
+    final digits = prefix.replaceAll(RegExp(r'\D'), '');
+    final firstDigit = digits.isNotEmpty ? digits[0] : '';
+    return '$firstTwoLetters$firstDigit'.toLowerCase();
+  }
 
   void _scrollToTop() {
     widget.scrollController.animateTo(
@@ -68,23 +81,22 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Dataset Selector
-          const Text('Event Dataset', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text('Dataset', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           DropdownButton<String>(
             value: _selectedDataset,
             isExpanded: true,
-            items: _datasetLabels.entries.map((entry) {
-              return DropdownMenuItem<String>(
-                value: entry.key,
-                child: Text(entry.value),
-              );
-            }).toList(),
             onChanged: (value) {
               if (value != null) {
                 setState(() => _selectedDataset = value);
-                widget.onDatasetSwitch?.call(value);
+                widget.onDatasetSelected(value);
               }
             },
+            items: const [
+              DropdownMenuItem(value: 'flr', child: Text('FLR')),
+              DropdownMenuItem(value: 'tvr', child: Text('TVR')),
+              DropdownMenuItem(value: 'champs', child: Text('Champs')),
+            ],
           ),
           const Divider(height: 32),
 

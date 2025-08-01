@@ -17,15 +17,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     await Future.delayed(const Duration(seconds: 5)); // Splash duration
-
-    final isLoggedIn = await AuthService().isLoggedIn();
     
     if (mounted) {
-      Navigator.pushReplacementNamed(
-        context,
-        isLoggedIn ? '/dashboard' : '/login',
-      );
-    }
+    Navigator.pushReplacementNamed(context, '/login');
+  }
   }
 
   @override
