@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frc_scout_app/config/config_storage.dart';  // <-- new import
 import 'package:frc_scout_app/form/form_config.dart';
 
 class CustomizeMatchScout extends StatefulWidget {
@@ -22,46 +22,36 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   String? _selectedConfigName;
   final TextEditingController _nameController = TextEditingController();
 
-  static const savedConfigsKey = 'saved_form_configs';
-
   Map<String, List<FormConfig>> _allConfigs = {};
 
   @override
   void initState() {
     super.initState();
     _configs = List.from(widget.formConfigs);
-    _loadAllConfigNames();
+    _loadAllConfigs();
   }
 
-  Future<void> _loadAllConfigNames() async {
-    _allConfigs = await _loadAllConfigs();
-    setState(() {});
-  }
+  Future<void> _loadAllConfigs() async {
+    final names = await ConfigStorage.getConfigNames();
+    final Map<String, List<FormConfig>> loadedConfigs = {};
 
-  Future<Map<String, List<FormConfig>>> _loadAllConfigs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(savedConfigsKey);
-    if (raw == null) return {};
+    for (var name in names) {
+      final configs = await ConfigStorage.loadConfig(name);
+      loadedConfigs[name] = configs;
+    }
 
-    final Map<String, dynamic> decoded = jsonDecode(raw);
-    final Map<String, List<FormConfig>> configs = {};
-
-    decoded.forEach((key, value) {
-      final List<dynamic> listJson = value;
-      final listConfigs = listJson.map((e) => FormConfig.fromJson(e)).toList();
-      configs[key] = listConfigs;
+    setState(() {
+      _allConfigs = loadedConfigs;
     });
-
-    return configs;
   }
 
-  Future<void> _saveAllConfigs(Map<String, List<FormConfig>> configs) async {
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, dynamic> encoded = {};
-    configs.forEach((key, value) {
-      encoded[key] = value.map((c) => c.toJson()).toList();
-    });
-    await prefs.setString(savedConfigsKey, jsonEncode(encoded));
+  Future<void> _refreshConfigsWithMessage() async {
+    await _loadAllConfigs();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Configs refreshed')),
+      );
+    }
   }
 
   void _addFormInput(FormType type) async {
@@ -163,12 +153,9 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
     );
 
     if (saveResult == true) {
-      final allConfigs = await _loadAllConfigs();
       final name = _nameController.text.trim();
-      allConfigs[name] = _configs;
-
-      await _saveAllConfigs(allConfigs);
-      await _loadAllConfigNames();
+      await ConfigStorage.saveConfig(name, _configs);
+      await _loadAllConfigs();
 
       setState(() {
         _selectedConfigName = name;
@@ -196,9 +183,8 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
     );
 
     if (confirmed == true) {
-      final prefs = await SharedPreferences.getInstance();
-      _allConfigs.remove(_selectedConfigName);
-      await _saveAllConfigs(_allConfigs);
+      await ConfigStorage.deleteConfig(_selectedConfigName!);
+      await _loadAllConfigs();
 
       setState(() {
         _selectedConfigName = null;
@@ -279,6 +265,11 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             ElevatedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh'),
+              onPressed: _refreshConfigsWithMessage,
+            ),
+            ElevatedButton.icon(
               icon: const Icon(Icons.save),
               label: const Text('Save Config'),
               onPressed: _saveConfig,
@@ -297,7 +288,6 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
                     }).toList(),
                   ),
                 );
-
                 if (selectedType != null) {
                   _addFormInput(selectedType);
                 }

@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/record/record_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:frc_scout_app/config/config_storage.dart';  // new import
 import 'package:frc_scout_app/header/app_header.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/form/form_config.dart';
@@ -68,9 +67,6 @@ class MatchScout extends StatefulWidget {
 }
 
 class _MatchScoutState extends State<MatchScout> {
-  static const savedConfigsKey = 'saved_form_configs';
-  static const savedRecordsKey = 'saved_match_records';
-
   Map<String, List<FormConfig>> _savedConfigs = {};
   List<FormConfig> _currentConfig = [];
   String? _selectedConfigName;
@@ -79,98 +75,42 @@ class _MatchScoutState extends State<MatchScout> {
   MatchRecord? _currentRecord;
 
   bool _isCurrentRecordSaved = true;
-
   Map<String, dynamic> _formValues = {};
 
   final String _userName = "John Doe";
   final String _userEmail = "john.doe@example.com";
 
-  get divisions => null;
-
   @override
   void initState() {
     super.initState();
-    _loadConfigs();
-    _loadRecords();
+    _loadConfigsFromFiles();
+    _loadRecordsFromFiles();
   }
 
-  Future<void> _loadConfigs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(savedConfigsKey);
-
-    Map<String, List<FormConfig>> configs = {};
-    if (raw != null) {
-      final Map<String, dynamic> decoded = jsonDecode(raw);
-      decoded.forEach((key, value) {
-        final List<dynamic> listJson = value;
-        configs[key] = listJson.map((e) => FormConfig.fromJson(e)).toList();
-      });
+  Future<void> _loadConfigsFromFiles() async {
+    final names = await ConfigStorage.getConfigNames();
+    final Map<String, List<FormConfig>> loadedConfigs = {};
+    for (final name in names) {
+      final configs = await ConfigStorage.loadConfig(name);
+      loadedConfigs[name] = configs;
     }
-
     setState(() {
-      _savedConfigs = configs;
-      if (_savedConfigs.isNotEmpty) {
-        _selectedConfigName = _savedConfigs.keys.first;
-        _currentConfig = _savedConfigs[_selectedConfigName!]!;
+      _savedConfigs = loadedConfigs;
+    });
+  }
+
+  Future<void> _loadRecordsFromFiles() async {
+    final recordsMap = await RecordStorage.loadAllRecords();
+    final Map<String, MatchRecord> loadedRecords = {};
+    recordsMap.forEach((name, json) {
+      try {
+        loadedRecords[name] = MatchRecord.fromJson(json);
+      } catch (e) {
+        // Handle corrupted or invalid record if necessary
       }
     });
-  }
-
-  Future<void> _loadRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(savedRecordsKey);
-
-    Map<String, MatchRecord> records = {};
-    if (raw != null) {
-      final Map<String, dynamic> decoded = jsonDecode(raw);
-      decoded.forEach((key, value) {
-        records[key] = MatchRecord.fromJson(value);
-      });
-    }
-
     setState(() {
-      _savedRecords = records;
-    });
-  }
-
-  Future<void> _saveRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, dynamic> encoded = {};
-    _savedRecords.forEach((key, record) {
-      encoded[key] = record.toJson();
-    });
-    await prefs.setString(savedRecordsKey, jsonEncode(encoded));
-  }
-
-  void _onConfigSelected(String? name) {
-    if (name == null) return;
-    setState(() {
-      _selectedConfigName = name;
-      _currentConfig = _savedConfigs[name] ?? [];
-      _currentRecord = null;
-      _isCurrentRecordSaved = true;
-      _formValues.clear();
-    });
-  }
-
-  void _startNewRecord(String configName) {
-    if (!_savedConfigs.containsKey(configName)) return;
-    final config = _savedConfigs[configName]!;
-
-    setState(() {
-      _selectedConfigName = configName;
-      _currentConfig = config;
-      _currentRecord = MatchRecord(
-        recordName: 'New Record ${DateTime.now().toString()}',
-        matchNumber: '',
-        robotNumber: '',
-        isRedAlliance: true,
-        userName: _userName,
-        userEmail: _userEmail,
-        formData: {},
-      );
-      _isCurrentRecordSaved = false;
-      _formValues.clear();
+      _savedRecords = loadedRecords;
     });
   }
 
@@ -183,8 +123,7 @@ class _MatchScoutState extends State<MatchScout> {
         title: const Text('Save current record?'),
         content: const Text('You have an unsaved record open. Save before continuing?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false), child: const Text('Discard')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Discard')),
           ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
         ],
       ),
@@ -193,7 +132,7 @@ class _MatchScoutState extends State<MatchScout> {
     if (save == true) {
       _currentRecord!.formData = _collectFormData();
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
-      await _saveRecords();
+      await _saveRecordToFile(_currentRecord!);
       setState(() {
         _currentRecord = null;
         _isCurrentRecordSaved = true;
@@ -202,6 +141,10 @@ class _MatchScoutState extends State<MatchScout> {
       return true;
     }
     return save ?? false;
+  }
+
+  Future<void> _saveRecordToFile(MatchRecord record) async {
+    await RecordStorage.saveRecord(record.recordName, record.toJson());
   }
 
   Future<void> _openRecordManager() async {
@@ -218,7 +161,10 @@ class _MatchScoutState extends State<MatchScout> {
             children: [
               const Padding(
                 padding: EdgeInsets.all(12),
-                child: Text('Saved Records', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Saved Records',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ),
               Expanded(
                 child: _savedRecords.isEmpty
@@ -227,17 +173,14 @@ class _MatchScoutState extends State<MatchScout> {
                         children: _savedRecords.values.map((record) {
                           return ListTile(
                             title: Text(record.recordName),
-                            subtitle: Text('Match ${record.matchNumber}, Robot ${record.robotNumber}, '
-                                '${record.isRedAlliance ? "Red" : "Blue"} Alliance'),
+                            subtitle: Text(
+                              'Match ${record.matchNumber}, Robot ${record.robotNumber}, ${record.isRedAlliance ? "Red" : "Blue"} Alliance',
+                            ),
                             onTap: () {
                               Navigator.pop(context);
                               setState(() {
                                 _currentRecord = record;
                                 _formValues = Map<String, dynamic>.from(record.formData);
-                                if (_savedConfigs.containsKey(_selectedConfigName)) {
-                                  _currentConfig = _savedConfigs[_selectedConfigName!]!;
-                                }
-                                _selectedConfigName ??= _savedConfigs.keys.isNotEmpty ? _savedConfigs.keys.first : null;
                                 _isCurrentRecordSaved = true;
                               });
                             },
@@ -250,16 +193,20 @@ class _MatchScoutState extends State<MatchScout> {
                                     title: const Text('Delete Record?'),
                                     content: Text('Delete record "${record.recordName}"?'),
                                     actions: [
-                                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                                      ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+                                      TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancel')),
+                                      ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Delete')),
                                     ],
                                   ),
                                 );
                                 if (confirm == true) {
+                                  await RecordStorage.deleteRecord(record.recordName);
                                   setState(() {
                                     _savedRecords.remove(record.recordName);
                                   });
-                                  await _saveRecords();
                                   if (_currentRecord?.recordName == record.recordName) {
                                     _currentRecord = null;
                                     _formValues.clear();
@@ -273,40 +220,107 @@ class _MatchScoutState extends State<MatchScout> {
                         }).toList(),
                       ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  final selectedConfig = await showDialog<String>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Select Config for New Record'),
-                      content: DropdownButton<String>(
-                        value: _selectedConfigName,
-                        items: _savedConfigs.keys.map((name) {
-                          return DropdownMenuItem(
-                            value: name,
-                            child: Text(name),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh Records'),
+                    onPressed: () async {
+                      final recordsMap = await RecordStorage.loadAllRecords();
+                      final Map<String, MatchRecord> loadedRecords = {};
+                      recordsMap.forEach((name, json) {
+                        try {
+                          loadedRecords[name] = MatchRecord.fromJson(json);
+                        } catch (_) {}
+                      });
+                      if (mounted) {
+                        setState(() {
+                          _savedRecords = loadedRecords;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Records refreshed')),
+                        );
+                      }
+                    },
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final selectedConfig = await showDialog<String>(
+                        context: context,
+                        builder: (context) {
+                          String? dropdownValue = _selectedConfigName ??
+                              (_savedConfigs.keys.isNotEmpty ? _savedConfigs.keys.first : null);
+                          String? errorText;
+
+                          return StatefulBuilder(
+                            builder: (context, setStateDialog) {
+                              return AlertDialog(
+                                title: const Text('Select Config for New Record'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    DropdownButton<String>(
+                                      isExpanded: true,
+                                      value: dropdownValue,
+                                      items: _savedConfigs.keys.map((name) {
+                                        return DropdownMenuItem(
+                                          value: name,
+                                          child: Text(name),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setStateDialog(() {
+                                          dropdownValue = value;
+                                          errorText = null; // clear error on change
+                                        });
+                                      },
+                                    ),
+                                    if (errorText != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Text(
+                                          errorText!,
+                                          style: const TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, null),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (dropdownValue == null) {
+                                        setStateDialog(() {
+                                          errorText = 'Please select a config before continuing.';
+                                        });
+                                      } else {
+                                        Navigator.pop(context, dropdownValue);
+                                      }
+                                    },
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              );
+                            },
                           );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            Navigator.pop(context, value);
-                          }
                         },
-                      ),
-                    ),
-                  );
-                  if (selectedConfig != null) {
-                    setState(() {
-                      _startNewRecord(selectedConfig);
-                    });
-                  }
-                },
-                child: const Text('New Record'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+                      );
+                      if (selectedConfig != null) {
+                        _startNewRecord(selectedConfig);
+                      }
+                    },
+                    child: const Text('New Record'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -315,9 +329,31 @@ class _MatchScoutState extends State<MatchScout> {
     );
   }
 
+  void _startNewRecord(String configName) {
+    if (!_savedConfigs.containsKey(configName)) return;
+    final config = _savedConfigs[configName]!;
+
+    setState(() {
+      _selectedConfigName = configName;
+      _currentConfig = config;
+      _currentRecord = MatchRecord(
+        recordName: 'New Record ${DateTime.now().toIso8601String()}',
+        matchNumber: '',
+        robotNumber: '',
+        isRedAlliance: true,
+        userName: _userName,
+        userEmail: _userEmail,
+        formData: {},
+      );
+      _isCurrentRecordSaved = false;
+      _formValues.clear();
+    });
+  }
+
   Future<void> _saveCurrentRecord() async {
     if (_currentRecord == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No record to save.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('No record to save.')));
       return;
     }
 
@@ -337,12 +373,10 @@ class _MatchScoutState extends State<MatchScout> {
                 TextField(
                   controller: matchNumberController,
                   decoration: const InputDecoration(labelText: 'Match Number'),
-                  onChanged: (val) => _markCurrentRecordDirty(label: 'Match Number', value: val),
                 ),
                 TextField(
                   controller: robotNumberController,
                   decoration: const InputDecoration(labelText: 'Robot Number'),
-                  onChanged: (val) => _markCurrentRecordDirty(label: 'Robot Number', value: val),
                 ),
                 Row(
                   children: [
@@ -355,7 +389,6 @@ class _MatchScoutState extends State<MatchScout> {
                           setStateSB(() {
                             isRedAlliance = val;
                           });
-                          _markCurrentRecordDirty(label: 'Alliance', value: val);
                         },
                       ),
                     ),
@@ -366,7 +399,6 @@ class _MatchScoutState extends State<MatchScout> {
                   controller: TextEditingController(text: _currentRecord!.recordName),
                   onChanged: (val) {
                     _currentRecord!.recordName = val;
-                    _markCurrentRecordDirty(label: 'Record Name', value: val);
                   },
                 ),
                 ListTile(
@@ -382,8 +414,11 @@ class _MatchScoutState extends State<MatchScout> {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
         ],
       ),
     );
@@ -399,20 +434,17 @@ class _MatchScoutState extends State<MatchScout> {
       _currentRecord!.formData = _collectFormData();
 
       if (_currentRecord!.recordName.trim().isEmpty) {
-        _currentRecord!.recordName = 'New Record ${DateTime.now().toString()}';
+        _currentRecord!.recordName = 'New Record ${DateTime.now().toIso8601String()}';
       }
 
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
 
-      // Save to local JSON file here:
-      await RecordStorage.saveRecord(_currentRecord!.recordName, _currentRecord!.toJson());
-
-      // Also keep the SharedPreferences backup if you want
-      await _saveRecords();
+      await _saveRecordToFile(_currentRecord!);
 
       _isCurrentRecordSaved = true;
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record saved!')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Record saved!')));
       setState(() {});
     }
   }
@@ -478,7 +510,7 @@ class _MatchScoutState extends State<MatchScout> {
           label: config.label,
           min: config.extraParams['min'] ?? 0,
           max: config.extraParams['max'] ?? 10,
-          divisions: divisions,
+          divisions: config.extraParams['divisions'],
           onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.date:
