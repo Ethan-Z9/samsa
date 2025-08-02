@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frc_scout_app/auth/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

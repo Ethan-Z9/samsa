@@ -1,5 +1,7 @@
+import 'dart:io'; // For exit(0)
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For SystemNavigator.pop()
 import 'package:frc_scout_app/auth/auth_service.dart';
 import 'package:frc_scout_app/data/user_session.dart';
 
@@ -29,14 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
         final user = await _authService.getScoutData(email);
 
         if (user != null) {
-          // Save user's name to session
           final session = UserSession();
           session.firstName = user['firstName'] ?? '';
           session.lastName = user['lastName'] ?? '';
-
-          // Save login state in Hive
           await _authService.login(email);
-
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           _showError('User info not found');
@@ -61,6 +59,16 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  void _exitApp() {
+    // ======== EXIT OPTIONS BELOW ========
+
+    exit(0); // <-- ✅ Windows: Leave this uncommented
+
+    // SystemNavigator.pop(); // <-- ✅ Android: Uncomment this and comment out exit(0)
+
+    // =====================================
   }
 
   @override
@@ -153,12 +161,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Text('LOGIN', style: TextStyle(fontSize: 16)),
                             ),
                           ),
-                          // Added data use notice here
+
+                          // Exit App Button
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
+                              label: const Text(
+                                'Exit App',
+                                style: TextStyle(color: Colors.redAccent),
+                              ),
+                              onPressed: _exitApp,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.redAccent),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+
                           const SizedBox(height: 16),
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                                "By logging in, you agree to data use as outlined in Settings.",
+                              "By logging in, you agree to data use as outlined in Settings.",
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[800],

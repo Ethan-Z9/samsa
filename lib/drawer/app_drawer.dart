@@ -9,31 +9,53 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          // Drawer Header
+          // Drawer Header with background image
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Colors.green,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/water.png'),
+                fit: BoxFit.cover,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'FRC Scout App',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+            child: Container(
+              alignment: Alignment.bottomLeft,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: const [
+                  Text(
+                    'FRC Scout App',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Navigation',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
+                  SizedBox(height: 4),
+                  Text(
+                    'Navigation',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black38,
+                          offset: Offset(1, 1),
+                          blurRadius: 1,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 

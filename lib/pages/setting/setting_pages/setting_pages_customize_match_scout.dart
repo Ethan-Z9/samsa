@@ -21,10 +21,8 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
   late List<FormConfig> _configs;
   String? _selectedConfigName;
   final TextEditingController _nameController = TextEditingController();
-  bool _setAsDefault = false;
 
   static const savedConfigsKey = 'saved_form_configs';
-  static const defaultConfigNameKey = 'default_form_config_name';
 
   Map<String, List<FormConfig>> _allConfigs = {};
 
@@ -64,11 +62,6 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
       encoded[key] = value.map((c) => c.toJson()).toList();
     });
     await prefs.setString(savedConfigsKey, jsonEncode(encoded));
-  }
-
-  Future<void> _saveDefaultConfigName(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(defaultConfigNameKey, name);
   }
 
   void _addFormInput(FormType type) async {
@@ -147,33 +140,14 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
     }
 
     _nameController.clear();
-    _setAsDefault = false;
 
     final saveResult = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Save Configuration'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Config Name'),
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  value: _setAsDefault,
-                  onChanged: (v) {
-                    setState(() {
-                      _setAsDefault = v ?? false;
-                    });
-                  },
-                ),
-                const Text('Set as default config'),
-              ],
-            ),
-          ],
+        content: TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(labelText: 'Config Name'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -194,9 +168,8 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
       allConfigs[name] = _configs;
 
       await _saveAllConfigs(allConfigs);
-      if (_setAsDefault) await _saveDefaultConfigName(name);
-
       await _loadAllConfigNames();
+
       setState(() {
         _selectedConfigName = name;
       });
