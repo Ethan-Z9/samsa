@@ -4,13 +4,37 @@ import 'package:path_provider/path_provider.dart';
 
 class RecordStorage {
   static Directory? _recordsDir;
+  static String? _customFolderPath;
+
+  /// Set a custom folder path to override default location.
+  /// Must be an absolute path.
+  static void setCustomFolderPath(String path) {
+    final dir = Directory(path);
+    if (!dir.isAbsolute) {
+      throw ArgumentError('Custom folder path must be an absolute path');
+    }
+    _customFolderPath = path;
+    _recordsDir = null; // reset cached dir
+  }
 
   // Get or create the match_records folder
   static Future<Directory> getRecordsDir() async {
     if (_recordsDir != null) return _recordsDir!;
 
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final recordsDir = Directory('${appDocDir.path}/match_records');
+    Directory baseDir;
+
+    if (_customFolderPath != null) {
+      baseDir = Directory(_customFolderPath!);
+    } else if (Platform.isWindows) {
+      baseDir = await getApplicationDocumentsDirectory();
+    } else if (Platform.isAndroid) {
+      baseDir = await getApplicationDocumentsDirectory();
+    } else {
+      baseDir = await getApplicationDocumentsDirectory();
+    }
+
+    final recordsDir = Directory('${baseDir.path}/match_records');
+
     print('Trying to get/create folder at: ${recordsDir.path}');
     if (!await recordsDir.exists()) {
       print('Folder does not exist. Creating records folder now...');
@@ -18,6 +42,7 @@ class RecordStorage {
     } else {
       print('Folder already exists.');
     }
+
     _recordsDir = recordsDir;
     return _recordsDir!;
   }
@@ -46,16 +71,17 @@ class RecordStorage {
     final dir = await getRecordsDir();
     final records = <String, Map<String, dynamic>>{};
     if (await dir.exists()) {
-      final files = dir.listSync().whereType<File>().where((f) => f.path.endsWith('.json'));
-      for (var file in files) {
-        final content = await file.readAsString();
-        try {
-          final jsonData = jsonDecode(content) as Map<String, dynamic>;
-          final fileName = file.uri.pathSegments.last;
-          final recordName = fileName.replaceAll('.json', '').replaceAll('_', ' ');
-          records[recordName] = jsonData;
-        } catch (_) {
-          // Ignore corrupted file
+      await for (var entity in dir.list()) {
+        if (entity is File && entity.path.endsWith('.json')) {
+          try {
+            final content = await entity.readAsString();
+            final jsonData = jsonDecode(content) as Map<String, dynamic>;
+            final fileName = entity.uri.pathSegments.last;
+            final recordName = fileName.replaceAll('.json', '').replaceAll('_', ' ');
+            records[recordName] = jsonData;
+          } catch (_) {
+            // Ignore corrupted file
+          }
         }
       }
     }

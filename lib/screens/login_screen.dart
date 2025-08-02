@@ -1,4 +1,4 @@
-import 'dart:io'; // For exit(0)
+import 'dart:io' show exit, Platform; // For exit(0) and platform detection
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For SystemNavigator.pop()
@@ -18,8 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
 
+  // Purple-gray color for text and border
+  static const Color loginTextColor = Color.fromARGB(255, 115, 86, 159);
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
+
+    FocusScope.of(context).unfocus(); // dismiss keyboard on submit
 
     setState(() => _isLoading = true);
 
@@ -62,13 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _exitApp() {
-    // ======== EXIT OPTIONS BELOW ========
-
-    exit(0); // <-- ✅ Windows: Leave this uncommented
-
-    // SystemNavigator.pop(); // <-- ✅ Android: Uncomment this and comment out exit(0)
-
-    // =====================================
+    if (Platform.isAndroid) {
+      SystemNavigator.pop();
+    } else if (Platform.isIOS) {
+      // iOS apps generally shouldn't exit programmatically
+    } else {
+      exit(0);
+    }
   }
 
   @override
@@ -100,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white30),
+                      border: Border.all(color: Colors.white70),
                     ),
                     padding: const EdgeInsets.all(24.0),
                     child: Form(
@@ -134,17 +139,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 14),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white70, // <-- new background color
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   side: const BorderSide(
-                                    color: Color.fromARGB(255, 73, 69, 79),
+                                    color: loginTextColor,
                                     width: 1,
                                   ),
                                 ),
@@ -155,32 +161,41 @@ class _LoginScreenState extends State<LoginScreen> {
                                       height: 24,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: loginTextColor,
                                       ),
                                     )
-                                  : const Text('LOGIN', style: TextStyle(fontSize: 16)),
+                                  : const Text(
+                                      'LOGIN',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: loginTextColor,
+                                      ),
+                                    ),
                             ),
                           ),
 
-                          // Exit App Button
-                          const SizedBox(height: 16),
+                          // Exit App Button - filled red with purple-gray text/icon
+                          const SizedBox(height: 6),
                           SizedBox(
                             width: double.infinity,
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.exit_to_app, color: loginTextColor),
                               label: const Text(
                                 'Exit App',
-                                style: TextStyle(color: Colors.redAccent),
+                                style: TextStyle(color: loginTextColor),
                               ),
                               onPressed: _exitApp,
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.redAccent),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white70,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 6),
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(

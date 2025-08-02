@@ -21,19 +21,19 @@ class _DashboardPanelState extends State<DashboardPanel> {
   String _selectedDataset = 'flr';
 
   final Map<String, String> _columnDisplayNames = {
-    'match': 'Match #',
-    'red1robot': 'Red Robot 1',
-    'red2robot': 'Red Robot 2',
-    'red3robot': 'Red Robot 3',
-    'blue1robot': 'Blue Robot 1',
-    'blue2robot': 'Blue Robot 2',
-    'blue3robot': 'Blue Robot 3',
-    'red1scout': 'Red Scout 1',
-    'red2scout': 'Red Scout 2',
-    'red3scout': 'Red Scout 3',
-    'blue1scout': 'Blue Scout 1',
-    'blue2scout': 'Blue Scout 2',
-    'blue3scout': 'Blue Scout 3',
+    'match': 'Match',
+    'red1robot': 'R.Bot.1',
+    'red2robot': 'R.Bot.2',
+    'red3robot': 'R.Bot.3',
+    'blue1robot': 'B.Bot.1',
+    'blue2robot': 'B.Bot.2',
+    'blue3robot': 'B.Bot.3',
+    'red1scout': 'R.Sct.1',
+    'red2scout': 'R.Sct.2',
+    'red3scout': 'R.Sct.3',
+    'blue1scout': 'B.Sct.1',
+    'blue2scout': 'B.Sct.2',
+    'blue3scout': 'B.Sct.3',
   };
 
   @override
@@ -103,7 +103,7 @@ class _DashboardPanelState extends State<DashboardPanel> {
             Expanded(
               child: Center(
                 child: Container(
-                  width: 900,
+                  width: 1000,
                   height: 600,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
