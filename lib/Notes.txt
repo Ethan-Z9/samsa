@@ -1,3 +1,7 @@
-Dashboard Panel: Refresh button, Datasets exist as assets not a file like records or configs
-User Menu: Option to appear under
-Customize Match Scout: New UI
+Dashboard Panel: Refresh button, Datasets exist as assets not a file like records or config
+Customize Pit Scout: Same as Match Scout
+14 export/import files
+Link up a database
+Default configs
+Pull updates
+UI Plattes

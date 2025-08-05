@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Needed for Android exit
+// Needed for Android exit
 import 'dart:io'; // Needed for Windows exit
 
 import 'package:frc_scout_app/pages/dashboard/dashboard.dart';

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/record/record_storage.dart';
 import 'package:frc_scout_app/config/config_storage.dart';  // new import

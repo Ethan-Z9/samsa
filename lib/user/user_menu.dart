@@ -8,6 +8,7 @@ class UserMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.account_circle),
+      offset: const Offset(0, 40), // Moves the popup menu 40 pixels down
       itemBuilder: (context) => [
         const PopupMenuItem(
           value: 'logout',
@@ -22,7 +23,7 @@ class UserMenu extends StatelessWidget {
           await AuthService().logout();
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/login', 
-            (route) => false,  // Remove all existing routes
+            (route) => false,
           );
         }
       },

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frc_scout_app/config/config_storage.dart';  // <-- new import
 import 'package:frc_scout_app/form/form_config.dart';
@@ -52,6 +51,31 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
         const SnackBar(content: Text('Configs refreshed')),
       );
     }
+  }
+
+  Future<bool> _promptForConfigName() async {
+    _nameController.clear();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Config Name'),
+        content: TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(labelText: 'Config Name'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (_nameController.text.trim().isEmpty) return;
+              Navigator.pop(context, true);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    return result == true;
   }
 
   void _addFormInput(FormType type) async {
@@ -128,43 +152,21 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
           .showSnackBar(const SnackBar(content: Text('Add some inputs before saving.')));
       return;
     }
-
-    _nameController.clear();
-
-    final saveResult = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save Configuration'),
-        content: TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(labelText: 'Config Name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (_nameController.text.trim().isEmpty) return;
-              Navigator.pop(context, true);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    if (saveResult == true) {
-      final name = _nameController.text.trim();
-      await ConfigStorage.saveConfig(name, _configs);
-      await _loadAllConfigs();
-
-      setState(() {
-        _selectedConfigName = name;
-      });
-
-      widget.onUpdate(_configs);
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved!')));
+    if (_selectedConfigName == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please add a config name first.')));
+      return;
     }
+    await ConfigStorage.saveConfig(_selectedConfigName!, _configs);
+    await _loadAllConfigs();
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved!')));
+
+    setState(() {
+      _selectedConfigName = null;
+      _configs = [];
+    });
+    widget.onUpdate(_configs);
   }
 
   void _deleteSelectedConfig() async {
@@ -276,6 +278,14 @@ class _CustomizeMatchScoutState extends State<CustomizeMatchScout> {
             ),
             FloatingActionButton(
               onPressed: () async {
+                if (_selectedConfigName == null) {
+                  final hasName = await _promptForConfigName();
+                  if (!hasName) return;
+                  setState(() {
+                    _selectedConfigName = _nameController.text.trim();
+                    _configs = [];
+                  });
+                }
                 final selectedType = await showModalBottomSheet<FormType>(
                   context: context,
                   builder: (context) => ListView(
