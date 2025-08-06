@@ -58,4 +58,7 @@ class CSVLoader {
 
   static Future<List<Map<String, dynamic>>> loadMatchsChamps() =>
       _loadMatchFile('matches_champs.csv');
+
+  static Future<List<Map<String, dynamic>>> loadMatchsWorlds() =>
+      _loadMatchFile('matches_worlds.csv');
 }

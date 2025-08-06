@@ -96,6 +96,7 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
               DropdownMenuItem(value: 'flr', child: Text('FLR')),
               DropdownMenuItem(value: 'tvr', child: Text('TVR')),
               DropdownMenuItem(value: 'champs', child: Text('Champs')),
+              DropdownMenuItem(value: 'worlds', child: Text('Worlds')),
             ],
           ),
           const Divider(height: 32),
