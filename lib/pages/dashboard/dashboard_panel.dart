@@ -55,6 +55,8 @@ class _DashboardPanelState extends State<DashboardPanel> {
         return CSVLoader.loadMatchsTVR();
       case 'champs':
         return CSVLoader.loadMatchsChamps();
+      case 'worlds':
+        return CSVLoader.loadMatchsWorlds();
       case 'flr':
       default:
         return CSVLoader.loadMatchsFLR();
