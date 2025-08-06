@@ -37,3 +37,4 @@ flutter:
     - assets/csv/matches_flr.csv
     - assets/csv/matches_tvr.csv
     - assets/csv/matches_champs.csv
+    - assets/csv/matches_worlds.csv
