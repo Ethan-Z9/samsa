@@ -32,9 +32,9 @@ flutter:
     - assets/images/login_screen_background.png       # Login screen background
     - assets/images/water.png
     # Scout roster
-    - assets/csv/scouts.csv
+    #- assets/csv/scouts.csv
     # Match schedule
-    - assets/csv/matches_flr.csv
-    - assets/csv/matches_tvr.csv
-    - assets/csv/matches_champs.csv
-    - assets/csv/matches_worlds.csv
+    #- assets/csv/matches_flr.csv
+    #- assets/csv/matches_tvr.csv
+    #- assets/csv/matches_champs.csv
+    #- assets/csv/matches_worlds.csv
