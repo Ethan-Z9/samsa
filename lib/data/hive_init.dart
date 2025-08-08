@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class HiveInit {
@@ -9,7 +11,19 @@ class HiveInit {
   static late Box<Map<dynamic, dynamic>> matchesWorldsBox;
 
   static Future<void> init() async {
-    await Hive.initFlutter();
+    // Get app's documents directory
+    Directory appDir = await getApplicationDocumentsDirectory();
+    
+    // Create custom folder path
+    Directory hiveDir = Directory('${appDir.path}/hive_data');
+    
+    // Make sure the folder exists
+    if (!await hiveDir.exists()) {
+      await hiveDir.create(recursive: true);
+    }
+
+    // Initialize Hive at that custom folder
+    await Hive.initFlutter(hiveDir.path);
 
     // Open scouts box
     scoutsBox = await Hive.openBox('scouts');
