@@ -6,15 +6,16 @@ import 'package:frc_scout_app/data/hive_init.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Hive and open boxes
   await HiveInit.init();
 
-  // Fetch CSVs from Google Sheets and cache them locally
-  await CSVLoader.fetchAllCsvs();
+  // Fetch CSVs from Google Sheets, save raw CSV files, and update Hive boxes with parsed data
+  await CSVLoader.fetchAllAndCache();
 
-  // Load scouts from cached CSV into Hive if empty
-  if (HiveInit.scoutsBox.isEmpty) {
-    final scouts = await CSVLoader.loadScouts(); // now loads from cached file
-    await HiveInit.scoutsBox.addAll(scouts);
+  // If scouts data missing in Hive, fetch and cache scouts CSV explicitly
+  final scoutsData = HiveInit.scoutsBox.get('data');
+  if (scoutsData == null) {
+    await CSVLoader.fetchAndCacheCsvToHive('scouts');
   }
 
   runApp(const FRCScoutApp());

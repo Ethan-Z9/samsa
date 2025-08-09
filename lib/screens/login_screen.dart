@@ -30,6 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final email = _emailController.text.trim().toLowerCase();
+
+      // Debug print all scout emails to console
+      await AuthService.debugPrintAllScoutEmails();
+
       final isValid = await _authService.validateScout(email);
 
       if (isValid) {

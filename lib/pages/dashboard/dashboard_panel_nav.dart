@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frc_scout_app/data/csv_loader.dart';
 
 class DashboardPanelNav extends StatefulWidget {
   final Future<List<Map<String, dynamic>>> matchDataFuture;
@@ -7,9 +8,11 @@ class DashboardPanelNav extends StatefulWidget {
   final Function(int?)? onTeamHighlight;
   final Function(String?)? onScoutHighlight;
   final Function(bool)? onUserScoutToggle;
-
   final String selectedDatasetKey;
   final Function(String) onDatasetSelected;
+
+  // Callback to notify parent to reload data after refresh
+  final Future<void> Function()? onRefresh;
 
   const DashboardPanelNav({
     super.key,
@@ -21,6 +24,7 @@ class DashboardPanelNav extends StatefulWidget {
     this.onUserScoutToggle,
     required this.selectedDatasetKey,
     required this.onDatasetSelected,
+    this.onRefresh,
   });
 
   @override
@@ -31,6 +35,7 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
   final _teamSearchController = TextEditingController();
   final _scoutSearchController = TextEditingController();
   bool _highlightUserScout = false;
+  bool _isRefreshing = false;
 
   late String _selectedDataset;
 
@@ -38,15 +43,6 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
   void initState() {
     super.initState();
     _selectedDataset = widget.selectedDatasetKey;
-  }
-
-  String _shortenScoutEmail(String email) {
-    final prefix = email.split('@')[0];
-    final letters = prefix.replaceAll(RegExp(r'\d'), '');
-    final firstTwoLetters = letters.length >= 2 ? letters.substring(0, 2) : letters;
-    final digits = prefix.replaceAll(RegExp(r'\D'), '');
-    final firstDigit = digits.isNotEmpty ? digits[0] : '';
-    return '$firstTwoLetters$firstDigit'.toLowerCase();
   }
 
   void _scrollToTop() {
@@ -65,6 +61,24 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
       position,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
+    );
+  }
+
+  Future<void> _refreshCsvs() async {
+    setState(() => _isRefreshing = true);
+
+    // Refresh only matches CSVs and update Hive boxes
+    await CSVLoader.fetchAllAndCache();
+
+    // Call the parent callback so it reloads the table
+    if (widget.onRefresh != null) {
+      await widget.onRefresh!();
+    }
+
+    setState(() => _isRefreshing = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('CSV data refreshed')),
     );
   }
 
@@ -99,6 +113,21 @@ class _DashboardPanelNavState extends State<DashboardPanelNav> {
               DropdownMenuItem(value: 'worlds', child: Text('Worlds')),
             ],
           ),
+          const SizedBox(height: 8),
+
+          // Refresh Button
+          ElevatedButton.icon(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh, size: 16),
+            label: Text(_isRefreshing ? 'Refreshing...' : 'Refresh CSVs'),
+            onPressed: _isRefreshing ? null : _refreshCsvs,
+          ),
+
           const Divider(height: 32),
 
           // Navigation Controls

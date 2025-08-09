@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frc_scout_app/data/csv_loader.dart';
+import 'package:frc_scout_app/data/csv_loader.dart'; // UPDATED import
 import 'package:frc_scout_app/auth/auth_service.dart';
 import 'dashboard_panel_nav.dart';
 import 'dashboard_panel_nav_commands.dart';
@@ -52,14 +52,43 @@ class _DashboardPanelState extends State<DashboardPanel> {
   Future<List<Map<String, dynamic>>> _loadDataForDataset(String datasetKey) {
     switch (datasetKey) {
       case 'tvr':
-        return CSVLoader.loadMatchsTVR();
+        return CSVLoader.loadFromHive('matches_tvr');
       case 'champs':
-        return CSVLoader.loadMatchsChamps();
+        return CSVLoader.loadFromHive('matches_champs');
       case 'worlds':
-        return CSVLoader.loadMatchsWorlds();
+        return CSVLoader.loadFromHive('matches_worlds');
       case 'flr':
       default:
-        return CSVLoader.loadMatchsFLR();
+        return CSVLoader.loadFromHive('matches_flr');
+    }
+  }
+
+  Future<void> _reloadCurrentDataset() async {
+    setState(() {
+      _matchDataFuture = _loadDataForDataset(_selectedDataset);
+    });
+  }
+
+  // NEW: Refresh from Google Sheets, update Hive, then reload
+  Future<void> _refreshCurrentDatasetFromWeb() async {
+    final boxName = _datasetKeyToBoxName(_selectedDataset);
+    await CSVLoader.fetchAndCacheCsvToHive(boxName);
+    setState(() {
+      _matchDataFuture = CSVLoader.loadFromHive(boxName);
+    });
+  }
+
+  String _datasetKeyToBoxName(String key) {
+    switch (key) {
+      case 'tvr':
+        return 'matches_tvr';
+      case 'champs':
+        return 'matches_champs';
+      case 'worlds':
+        return 'matches_worlds';
+      case 'flr':
+      default:
+        return 'matches_flr';
     }
   }
 
@@ -101,6 +130,9 @@ class _DashboardPanelState extends State<DashboardPanel> {
               }),
               selectedDatasetKey: _selectedDataset,
               onDatasetSelected: _onDatasetSelected,
+
+              // UPDATED: pass new refresh callback to fetch from web and reload Hive
+              onRefresh: _refreshCurrentDatasetFromWeb,
             ),
             Expanded(
               child: Center(
