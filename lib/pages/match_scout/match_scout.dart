@@ -507,10 +507,13 @@ class _MatchScoutState extends State<MatchScout> {
       case FormType.slider:
         return SliderInput(
           label: config.label,
-          min: config.extraParams['min'] ?? 0,
-          max: config.extraParams['max'] ?? 10,
-          divisions: config.extraParams['divisions'],
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          min: (config.extraParams['min'] ?? 0).toDouble(),
+          max: (config.extraParams['max'] ?? 10).toDouble(),
+          divisions: config.extraParams['divisions'] != null
+              ? (config.extraParams['divisions'] as num).toInt()
+              : null,
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.date:
         return DateInput(

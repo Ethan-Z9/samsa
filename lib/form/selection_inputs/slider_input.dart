@@ -4,7 +4,7 @@ class SliderInput extends StatefulWidget {
   final String label;
   final double min;
   final double max;
-  final double divisions;
+  final int? divisions; // <-- int now, optional
   final double? initialValue;
   final ValueChanged<double>? onChanged;
 
@@ -13,7 +13,7 @@ class SliderInput extends StatefulWidget {
     required this.label,
     required this.min,
     required this.max,
-    required this.divisions,
+    this.divisions, // optional — pass null for smooth slider
     this.initialValue,
     this.onChanged,
   });
@@ -28,29 +28,36 @@ class _SliderInputState extends State<SliderInput> {
   @override
   void initState() {
     super.initState();
-    _value = widget.initialValue ?? widget.min;
+    double val = widget.initialValue ?? widget.min;
+    _value = val.clamp(widget.min, widget.max);
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Column(
-        children: [
-          Text('${widget.label}: ${_value.toStringAsFixed(1)}'),
-          Slider(
-            value: _value,
-            min: widget.min,
-            max: widget.max,
-            divisions: widget.divisions.toInt(),
-            label: _value.toStringAsFixed(1),
-            onChanged: (val) {
-              setState(() {
-                _value = val;
-              });
-              widget.onChanged?.call(val);
-            },
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            Text(
+              '${widget.label}: ${_value.toStringAsFixed(widget.divisions != null ? 0 : 1)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Slider(
+              value: _value,
+              min: widget.min,
+              max: widget.max,
+              divisions: widget.divisions,
+              label: _value.toStringAsFixed(widget.divisions != null ? 0 : 1),
+              onChanged: (val) {
+                setState(() {
+                  _value = val;
+                });
+                widget.onChanged?.call(val);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
