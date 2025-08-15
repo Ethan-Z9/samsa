@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:frc_scout_app/data/user_session.dart';
 import 'package:frc_scout_app/record/record_storage.dart';
-import 'package:frc_scout_app/config/config_storage.dart';  // new import
+import 'package:frc_scout_app/config/config_storage.dart';
 import 'package:frc_scout_app/header/app_header.dart';
 import 'package:frc_scout_app/drawer/app_drawer.dart';
 import 'package:frc_scout_app/form/form_config.dart';
 import 'package:frc_scout_app/form/draggable_resizable_card.dart';
+import 'package:frc_scout_app/auth/auth_service.dart';
 
 import 'package:frc_scout_app/form/basic_inputs/counter_input.dart';
 import 'package:frc_scout_app/form/basic_inputs/number_input.dart';
@@ -76,14 +78,25 @@ class _MatchScoutState extends State<MatchScout> {
   bool _isCurrentRecordSaved = true;
   Map<String, dynamic> _formValues = {};
 
-  final String _userName = "John Doe";
-  final String _userEmail = "john.doe@example.com";
+  String _userName = 'Guest';
+  String _userEmail = '';
 
   @override
   void initState() {
     super.initState();
+    _loadUserInfo();
     _loadConfigsFromFiles();
     _loadRecordsFromFiles();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final user = await AuthService().getCurrentUser();
+    if (user != null) {
+      setState(() {
+        _userName = user['fullName'] ?? 'Guest';
+        _userEmail = user['email'] ?? '';
+      });
+    }
   }
 
   Future<void> _loadConfigsFromFiles() async {
@@ -120,10 +133,15 @@ class _MatchScoutState extends State<MatchScout> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Save current record?'),
-        content: const Text('You have an unsaved record open. Save before continuing?'),
+        content:
+            const Text('You have an unsaved record open. Save before continuing?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Discard')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Discard')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save')),
         ],
       ),
     );
@@ -179,7 +197,8 @@ class _MatchScoutState extends State<MatchScout> {
                               Navigator.pop(context);
                               setState(() {
                                 _currentRecord = record;
-                                _formValues = Map<String, dynamic>.from(record.formData);
+                                _formValues =
+                                    Map<String, dynamic>.from(record.formData);
                                 _isCurrentRecordSaved = true;
                               });
                             },
@@ -190,23 +209,28 @@ class _MatchScoutState extends State<MatchScout> {
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: const Text('Delete Record?'),
-                                    content: Text('Delete record "${record.recordName}"?'),
+                                    content: Text(
+                                        'Delete record "${record.recordName}"?'),
                                     actions: [
                                       TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
                                           child: const Text('Cancel')),
                                       ElevatedButton(
-                                          onPressed: () => Navigator.pop(context, true),
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
                                           child: const Text('Delete')),
                                     ],
                                   ),
                                 );
                                 if (confirm == true) {
-                                  await RecordStorage.deleteRecord(record.recordName);
+                                  await RecordStorage.deleteRecord(
+                                      record.recordName);
                                   setState(() {
                                     _savedRecords.remove(record.recordName);
                                   });
-                                  if (_currentRecord?.recordName == record.recordName) {
+                                  if (_currentRecord?.recordName ==
+                                      record.recordName) {
                                     _currentRecord = null;
                                     _formValues.clear();
                                     _isCurrentRecordSaved = true;
@@ -246,69 +270,74 @@ class _MatchScoutState extends State<MatchScout> {
                   ElevatedButton(
                     onPressed: () async {
                       Navigator.pop(context);
-                      final selectedConfig = await showDialog<String>(
-                        context: context,
-                        builder: (context) {
-                          String? dropdownValue = _selectedConfigName ??
-                              (_savedConfigs.keys.isNotEmpty ? _savedConfigs.keys.first : null);
-                          String? errorText;
+                      final selectedConfig =
+                          await showDialog<String>(context: context, builder:
+                              (context) {
+                        String? dropdownValue = _selectedConfigName ??
+                            (_savedConfigs.keys.isNotEmpty
+                                ? _savedConfigs.keys.first
+                                : null);
+                        String? errorText;
 
-                          return StatefulBuilder(
-                            builder: (context, setStateDialog) {
-                              return AlertDialog(
-                                title: const Text('Select Config for New Record'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    DropdownButton<String>(
-                                      isExpanded: true,
-                                      value: dropdownValue,
-                                      items: _savedConfigs.keys.map((name) {
-                                        return DropdownMenuItem(
-                                          value: name,
-                                          child: Text(name),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setStateDialog(() {
-                                          dropdownValue = value;
-                                          errorText = null; // clear error on change
-                                        });
-                                      },
-                                    ),
-                                    if (errorText != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: Text(
-                                          errorText!,
-                                          style: const TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, null),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      if (dropdownValue == null) {
-                                        setStateDialog(() {
-                                          errorText = 'Please select a config before continuing.';
-                                        });
-                                      } else {
-                                        Navigator.pop(context, dropdownValue);
-                                      }
+                        return StatefulBuilder(
+                          builder: (context, setStateDialog) {
+                            return AlertDialog(
+                              title:
+                                  const Text('Select Config for New Record'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  DropdownButton<String>(
+                                    isExpanded: true,
+                                    value: dropdownValue,
+                                    items: _savedConfigs.keys.map((name) {
+                                      return DropdownMenuItem(
+                                        value: name,
+                                        child: Text(name),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      setStateDialog(() {
+                                        dropdownValue = value;
+                                        errorText = null;
+                                      });
                                     },
-                                    child: const Text('OK'),
                                   ),
+                                  if (errorText != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        errorText!,
+                                        style:
+                                            const TextStyle(color: Colors.red),
+                                      ),
+                                    ),
                                 ],
-                              );
-                            },
-                          );
-                        },
-                      );
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, null),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (dropdownValue == null) {
+                                      setStateDialog(() {
+                                        errorText =
+                                            'Please select a config before continuing.';
+                                      });
+                                    } else {
+                                      Navigator.pop(context, dropdownValue);
+                                    }
+                                  },
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      });
                       if (selectedConfig != null) {
                         _startNewRecord(selectedConfig);
                       }
@@ -326,6 +355,16 @@ class _MatchScoutState extends State<MatchScout> {
         );
       },
     );
+  }
+
+  String _generateRecordName() {
+    final matchNum = _currentRecord?.matchNumber ?? '';
+    final robotNum = _currentRecord?.robotNumber ?? '';
+    final alliance = (_currentRecord?.isRedAlliance ?? true) ? 'Red' : 'Blue';
+    final userName = _userName;
+    final userEmail = _userEmail;
+
+    return 'Match.$matchNum-Robot.$robotNum-Alliance.$alliance-$userName-$userEmail';
   }
 
   void _startNewRecord(String configName) {
@@ -356,8 +395,10 @@ class _MatchScoutState extends State<MatchScout> {
       return;
     }
 
-    final matchNumberController = TextEditingController(text: _currentRecord!.matchNumber);
-    final robotNumberController = TextEditingController(text: _currentRecord!.robotNumber);
+    final matchNumberController =
+        TextEditingController(text: _currentRecord!.matchNumber);
+    final robotNumberController =
+        TextEditingController(text: _currentRecord!.robotNumber);
     bool isRedAlliance = _currentRecord!.isRedAlliance;
 
     final saved = await showDialog<bool>(
@@ -366,16 +407,30 @@ class _MatchScoutState extends State<MatchScout> {
         title: const Text('Save Record'),
         content: StatefulBuilder(
           builder: (context, setStateSB) {
+            final session = UserSession();
+
+            // Helper to generate the dynamic record name live
+            String getDynamicRecordName() {
+              final matchNum = matchNumberController.text.trim();
+              final robotNum = robotNumberController.text.trim();
+              final alliance = isRedAlliance ? 'Red' : 'Blue';
+              final userName = session.fullName.isNotEmpty ? session.fullName : 'Guest';
+              final userEmail = _userEmail;
+              return 'Match.$matchNum-Robot.$robotNum-Alliance.$alliance-$userName-$userEmail';
+            }
+
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: matchNumberController,
                   decoration: const InputDecoration(labelText: 'Match Number'),
+                  onChanged: (_) => setStateSB(() {}), // refresh record name live
                 ),
                 TextField(
                   controller: robotNumberController,
                   decoration: const InputDecoration(labelText: 'Robot Number'),
+                  onChanged: (_) => setStateSB(() {}), // refresh record name live
                 ),
                 Row(
                   children: [
@@ -393,16 +448,14 @@ class _MatchScoutState extends State<MatchScout> {
                     ),
                   ],
                 ),
-                TextField(
-                  decoration: const InputDecoration(labelText: 'Record Name'),
-                  controller: TextEditingController(text: _currentRecord!.recordName),
-                  onChanged: (val) {
-                    _currentRecord!.recordName = val;
-                  },
+                // Dynamic, untouchable record name
+                ListTile(
+                  title: const Text('Record Name'),
+                  subtitle: Text(getDynamicRecordName()),
                 ),
                 ListTile(
                   title: const Text('User Name'),
-                  subtitle: Text(_userName),
+                  subtitle: Text(session.fullName.isNotEmpty ? session.fullName : 'Guest'),
                 ),
                 ListTile(
                   title: const Text('User Email'),
@@ -417,7 +470,8 @@ class _MatchScoutState extends State<MatchScout> {
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save')),
         ],
       ),
     );
@@ -432,9 +486,8 @@ class _MatchScoutState extends State<MatchScout> {
 
       _currentRecord!.formData = _collectFormData();
 
-      if (_currentRecord!.recordName.trim().isEmpty) {
-        _currentRecord!.recordName = 'New Record ${DateTime.now().toIso8601String()}';
-      }
+      // Assign dynamic record name
+      _currentRecord!.recordName = _generateRecordName();
 
       _savedRecords[_currentRecord!.recordName] = _currentRecord!;
 
@@ -466,43 +519,52 @@ class _MatchScoutState extends State<MatchScout> {
       case FormType.counter:
         return CounterInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.number:
         return NumberInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.lever:
         return LeverInput(
           label: config.label,
           leftLabel: config.extraParams['leftLabel'] ?? 'Off',
           rightLabel: config.extraParams['rightLabel'] ?? 'On',
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.text:
         return TextInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.checkbox:
         return CheckboxInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.radio:
-        final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
+        final optionsList =
+            (config.extraParams['options'] as List<String>?) ?? [];
         return RadioInput(
           label: config.label,
           options: optionsList,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.dropdown:
-        final optionsList = (config.extraParams['options'] as List<String>?) ?? [];
+        final optionsList =
+            (config.extraParams['options'] as List<String>?) ?? [];
         return DropdownInput(
           label: config.label,
           options: optionsList,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.slider:
         return SliderInput(
@@ -518,17 +580,20 @@ class _MatchScoutState extends State<MatchScout> {
       case FormType.date:
         return DateInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.time:
         return TimeInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       case FormType.stopwatch:
         return StopwatchInput(
           label: config.label,
-          onChanged: (val) => _markCurrentRecordDirty(label: config.label, value: val),
+          onChanged: (val) =>
+              _markCurrentRecordDirty(label: config.label, value: val),
         );
       default:
         return const SizedBox.shrink();
@@ -550,6 +615,7 @@ class _MatchScoutState extends State<MatchScout> {
           );
         }).toList(),
       ),
+
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
