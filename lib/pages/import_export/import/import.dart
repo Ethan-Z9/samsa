@@ -35,6 +35,7 @@ class ImportPage extends StatelessWidget {
                   ),
                   const Divider(height: 32),
 
+                  /*
                   // Config Import
                   const Text('Configs',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -73,6 +74,7 @@ class ImportPage extends StatelessWidget {
                     icon: const Icon(Icons.qr_code_scanner),
                     label: const Text('Import Database (QR Code)'),
                   ),
+                  */
                 ],
               ),
             ),

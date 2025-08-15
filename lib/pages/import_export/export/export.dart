@@ -35,6 +35,7 @@ class ExportPage extends StatelessWidget {
                   ),
                   const Divider(height: 32),
 
+                  /*
                   // Config Export
                   const Text('Configs',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -73,6 +74,7 @@ class ExportPage extends StatelessWidget {
                     icon: const Icon(Icons.qr_code),
                     label: const Text('Export Database (QR Code)'),
                   ),
+                  */
                 ],
               ),
             ),

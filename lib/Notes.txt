@@ -1,12 +1,10 @@
-Dashboard Panel: Refresh button, Datasets exist as assets not a file like records or config
 Customize Pit Scout: Same as Match Scout
-14 export/import files
 Link up a database
 Default configs
 Pull updates
 UI Plattes
 
-
+Refresh button on configs selection
 
 Double counter (x/y) counter
-Stars
+Star counter
