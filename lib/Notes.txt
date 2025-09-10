@@ -8,3 +8,9 @@ Refresh button on configs selection
 
 Double counter (x/y) counter
 Star counter
+
+Currently app launches and trys to pull csv. Future: launch app, pull roster, pull csv on LOGIN, if exit remove roster
+
+Export option of Zip file. Then wire data transfer to computer with database then import
+
+    
